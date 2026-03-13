@@ -1,0 +1,32 @@
+{
+  "name": "@validance/safeclaw",
+  "version": "0.1.0",
+  "description": "Containerized execution for OpenClaw via Validance kernel",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "safeclaw": "./bin/safeclaw.mjs"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": ["openclaw", "plugin", "validance", "safeclaw", "security"],
+  "license": "MIT",
+  "files": [
+    "dist/",
+    "catalog/",
+    "docker/",
+    "bin/"
+  ],
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

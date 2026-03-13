@@ -1,0 +1,33 @@
+{
+  "id": "@validance/safeclaw",
+  "name": "SafeClaw — Containerized Execution",
+  "description": "Routes OpenClaw tool execution through Validance containers. Host is never touched.",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "kernelUrl": {
+        "type": "string",
+        "default": "http://localhost:7400",
+        "description": "Validance kernel HTTP URL"
+      },
+      "trustProfile": {
+        "type": "string",
+        "enum": ["conservative", "standard", "power-user"],
+        "default": "standard",
+        "description": "Approval tier preset"
+      },
+      "gatewayPort": {
+        "type": "number",
+        "default": 18789,
+        "description": "OpenClaw gateway port (for approval webhook)"
+      }
+    }
+  },
+  "uiHints": {
+    "kernelUrl": { "label": "Kernel URL", "placeholder": "http://localhost:7400" },
+    "trustProfile": { "label": "Trust Profile" },
+    "gatewayPort": { "label": "Gateway Port" }
+  }
+}

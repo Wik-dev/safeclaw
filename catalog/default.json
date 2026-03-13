@@ -1,0 +1,250 @@
+{
+  "templates": {
+    "exec": {
+      "persistent": true,
+      "docker_image": "sandbox",
+      "command_template": "sh -c '{command}'",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "command": {"type": "string", "description": "Shell command to execute"},
+          "cwd": {"type": "string", "description": "Working directory (relative to /workspace)"}
+        },
+        "required": ["command"]
+      },
+      "approval_tier": "human-confirm",
+      "timeout": 120,
+      "rate_limit": 200,
+      "network_policy": null,
+      "volumes": {
+        "/workspace": {"host_path": "${WORKSPACE}", "mode": "rw"},
+        "/home": {"host_path": "${HOME}", "mode": "ro"}
+      }
+    },
+    "write": {
+      "persistent": false,
+      "docker_image": "sandbox",
+      "command_template": "python /project/scripts/write_file.py '{path}'",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "path": {"type": "string", "description": "File path relative to workspace"},
+          "content": {"type": "string", "description": "File content to write"}
+        },
+        "required": ["path", "content"]
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 30,
+      "rate_limit": 500,
+      "volumes": {
+        "/workspace": {"host_path": "${WORKSPACE}", "mode": "rw"}
+      }
+    },
+    "edit": {
+      "persistent": false,
+      "docker_image": "sandbox",
+      "command_template": "python /project/scripts/edit_file.py '{path}'",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "path": {"type": "string", "description": "File path relative to workspace"},
+          "old_string": {"type": "string", "description": "Text to find"},
+          "new_string": {"type": "string", "description": "Text to replace with"}
+        },
+        "required": ["path", "old_string", "new_string"]
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 30,
+      "rate_limit": 500,
+      "volumes": {
+        "/workspace": {"host_path": "${WORKSPACE}", "mode": "rw"}
+      }
+    },
+    "browser": {
+      "persistent": true,
+      "docker_image": "browser",
+      "command_template": "python /project/scripts/browser.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "enum": ["navigate", "click", "type", "scroll", "screenshot", "execute_js", "submit_form", "read_text"]},
+          "url": {"type": "string"},
+          "selector": {"type": "string"},
+          "text": {"type": "string"},
+          "script": {"type": "string"},
+          "direction": {"type": "string", "enum": ["up", "down"]},
+          "subtype": {"type": "string", "description": "For policy ceiling checks"}
+        },
+        "required": ["action"]
+      },
+      "approval_tier": "human-confirm",
+      "timeout": 3600,
+      "rate_limit": 30,
+      "volumes": {
+        "/downloads": {"host_path": "${WORKSPACE}/downloads", "mode": "rw"}
+      },
+      "policy_ceilings": ["execute_js", "submit_form"]
+    },
+    "web_search": {
+      "persistent": false,
+      "docker_image": "web",
+      "command_template": "python /project/scripts/web_search.py '{query}'",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "Search query"}
+        },
+        "required": ["query"]
+      },
+      "approval_tier": "auto-approve",
+      "secret_refs": ["SEARCH_API_KEY"],
+      "timeout": 30,
+      "rate_limit": 100,
+      "network_policy": {"egress_allow": ["*.googleapis.com:443"]}
+    },
+    "web_fetch": {
+      "persistent": false,
+      "docker_image": "web",
+      "command_template": "python /project/scripts/web_fetch.py '{url}'",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "url": {"type": "string", "description": "URL to fetch"},
+          "method": {"type": "string", "enum": ["GET", "POST"], "default": "GET"},
+          "headers": {"type": "object", "description": "HTTP headers"},
+          "body": {"type": "string", "description": "Request body"}
+        },
+        "required": ["url"]
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 60,
+      "rate_limit": 100,
+      "network_policy": null
+    },
+    "message": {
+      "persistent": false,
+      "docker_image": "comms",
+      "command_template": "python /project/scripts/message.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "to": {"type": "string", "description": "Recipient address"},
+          "subject": {"type": "string", "description": "Message subject"},
+          "body": {"type": "string", "description": "Message body"},
+          "channel": {"type": "string", "description": "Message channel (email, slack, etc.)"}
+        },
+        "required": ["to", "body"]
+      },
+      "approval_tier": "human-confirm",
+      "timeout": 30,
+      "rate_limit": 20,
+      "secret_refs": ["SMTP_PASSWORD"]
+    },
+    "sessions_send": {
+      "persistent": false,
+      "docker_image": "comms",
+      "command_template": "python /project/scripts/sessions_send.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "session_key": {"type": "string", "description": "Target session key"},
+          "message": {"type": "string", "description": "Message to send"}
+        },
+        "required": ["session_key", "message"]
+      },
+      "approval_tier": "human-confirm",
+      "timeout": 30,
+      "rate_limit": 50
+    },
+    "cron": {
+      "persistent": false,
+      "docker_image": "sandbox",
+      "command_template": "python /project/scripts/cron.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "schedule": {"type": "string", "description": "Cron expression"},
+          "command": {"type": "string", "description": "Command to schedule"},
+          "action": {"type": "string", "enum": ["create", "list", "delete"]}
+        },
+        "required": ["action"]
+      },
+      "approval_tier": "human-confirm",
+      "timeout": 30,
+      "rate_limit": 10
+    },
+    "image": {
+      "persistent": false,
+      "docker_image": "sandbox",
+      "command_template": "python /project/scripts/image.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "prompt": {"type": "string", "description": "Image generation prompt"},
+          "size": {"type": "string", "description": "Image dimensions"}
+        },
+        "required": ["prompt"]
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 120,
+      "rate_limit": 50
+    },
+    "tts": {
+      "persistent": false,
+      "docker_image": "sandbox",
+      "command_template": "python /project/scripts/tts.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "text": {"type": "string", "description": "Text to synthesize"},
+          "voice": {"type": "string", "description": "Voice identifier"}
+        },
+        "required": ["text"]
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 60,
+      "rate_limit": 50
+    },
+    "canvas": {
+      "persistent": false,
+      "docker_image": "sandbox",
+      "command_template": "python /project/scripts/canvas.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "description": "Canvas action"},
+          "content": {"type": "string", "description": "Canvas content"}
+        },
+        "required": ["action"]
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 30,
+      "rate_limit": 100
+    },
+    "nodes": {
+      "persistent": false,
+      "docker_image": "sandbox",
+      "command_template": "python /project/scripts/nodes.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "description": "Node graph action"},
+          "node_id": {"type": "string", "description": "Target node ID"}
+        },
+        "required": ["action"]
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 30,
+      "rate_limit": 100
+    },
+    "gateway": {
+      "approval_tier": "always-deny"
+    }
+  },
+  "images": {
+    "sandbox": "validance-sandbox:latest",
+    "comms": "validance-comms:latest",
+    "web": "validance-web:latest",
+    "browser": "validance-browser:latest"
+  }
+}
