@@ -8,13 +8,15 @@
  *   - Health check on gateway start
  */
 
-import { KernelClient } from "./kernel-client.js";
+import { KernelClient, type ApprovalResolution } from "./kernel-client.js";
 import { Catalog } from "./catalog.js";
-import { createSafeClawTool, type SafeClawConfig } from "./meta-tool.js";
+import { createSafeClawTool, type SafeClawConfig, formatResult } from "./meta-tool.js";
 import {
   createApprovalNotifyHandler,
   createApprovalResolver,
+  createApprovalCheckTool,
 } from "./approval-handler.js";
+import { pendingProposals } from "./pending-store.js";
 import type { TrustProfile } from "./trust-profiles.js";
 
 export default {
@@ -33,20 +35,96 @@ export default {
     // 1. Meta-tool — the single tool the LLM calls
     api.registerTool(createSafeClawTool(client, catalog, config, workspacePath));
 
-    // 2. Approval webhook receiver
+    // 2. Check tool — polls pending proposal results after approval
+    api.registerTool(createApprovalCheckTool());
+
+    // 3. Approval webhook receiver
     api.registerHttpRoute?.({
-      method: "POST",
       path: "/safeclaw/approval-notify",
-      handler: createApprovalNotifyHandler(api),
+      auth: "plugin",
+      handler: createApprovalNotifyHandler(),
     });
 
-    // 3. Approval resolution gateway method
+    // 4. Approval resolution gateway method
     api.registerGatewayMethod?.(
       "safeclaw.approval.resolve",
       createApprovalResolver(client),
     );
 
-    // 4. Health check on gateway start
+    // 5. Deterministic approval command — bypasses the LLM entirely
+    api.registerCommand?.({
+      name: "sc-approve",
+      description: "Approve or deny a pending safeclaw action. Usage: /sc-approve <proposalId> allow-once|allow-always|deny|deny-always",
+      acceptsArgs: true,
+      requireAuth: true,
+      handler: async (ctx: { args?: string }) => {
+        const parts = (ctx.args ?? "").trim().split(/\s+/);
+        const proposalId = parts[0];
+        const decision = parts[1];
+
+        if (!proposalId || !decision) {
+          return {
+            text: "Usage: `/sc-approve <proposalId> allow-once|allow-always|deny|deny-always`",
+          };
+        }
+
+        const entry = pendingProposals.get(proposalId);
+        if (!entry) {
+          return { text: "Unknown or expired proposal ID." };
+        }
+
+        if (!entry.approvalId) {
+          // Webhook hasn't arrived yet — wait briefly
+          await new Promise((r) => setTimeout(r, 3000));
+          if (!entry.approvalId) {
+            return {
+              text: "Approval notification not yet received from Validance. Try again in a moment.",
+            };
+          }
+        }
+
+        const isApprove = decision.startsWith("allow");
+        const remember = decision === "allow-always" || decision === "deny-always";
+
+        const resolution: ApprovalResolution = {
+          decision: isApprove ? "approved" : "denied",
+          decided_by: "user",
+          remember,
+        };
+
+        try {
+          await client.resolveApproval(entry.approvalId, resolution);
+        } catch (err) {
+          return { text: `Failed to resolve: ${err}` };
+        }
+
+        if (!isApprove) {
+          pendingProposals.delete(proposalId);
+          return { text: `Denied: **${entry.action}**` };
+        }
+
+        // Wait for execution result
+        try {
+          const result = await Promise.race([
+            entry.promise,
+            new Promise<null>((r) => setTimeout(() => r(null), 30_000)),
+          ]);
+
+          pendingProposals.delete(proposalId);
+
+          if (!result) {
+            return { text: "Approved, but execution timed out. Use `safeclaw_check` tool to poll." };
+          }
+
+          return { text: `Approved & executed:\n${formatResult(result)}` };
+        } catch (err) {
+          pendingProposals.delete(proposalId);
+          return { text: `Approved, but execution failed: ${err}` };
+        }
+      },
+    });
+
+    // 6. Health check on gateway start
     api.on?.("gateway_start", async () => {
       const ok = await client.healthCheck();
       if (!ok) {
@@ -60,7 +138,7 @@ export default {
       }
     });
 
-    // 5. Cleanup on gateway stop
+    // 7. Cleanup on gateway stop
     api.on?.("gateway_stop", async () => {
       try {
         // Try to cleanup session containers — best effort

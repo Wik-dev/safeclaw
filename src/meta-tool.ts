@@ -5,20 +5,24 @@
  * tools. Each call maps to POST /api/proposals on the Validance kernel.
  */
 
+import { randomUUID } from "node:crypto";
 import type { KernelClient, ProposalResult } from "./kernel-client.js";
 import type { Catalog } from "./catalog.js";
 import { sessionHash } from "./session-map.js";
+import { pendingProposals, gcPending } from "./pending-store.js";
 
 export interface SafeClawConfig {
   kernelUrl: string;
   trustProfile?: string;
   gatewayPort?: number;
+  /** Host/IP for the approval webhook URL (seen from Validance container). Defaults to "localhost". */
+  gatewayHost?: string;
 }
 
 /**
  * Format the proposal result for the LLM.
  */
-function formatResult(result: ProposalResult): string {
+export function formatResult(result: ProposalResult): string {
   if (result.status === "denied") {
     return `[DENIED] ${result.reason ?? "Action was denied"}`;
   }
@@ -84,7 +88,64 @@ export function createSafeClawTool(
       );
 
       const gatewayPort = config.gatewayPort ?? 18789;
-      const notifyUrl = `http://localhost:${gatewayPort}/safeclaw/approval-notify`;
+      const gatewayHost = config.gatewayHost ?? "localhost";
+
+      // Check if this action requires human approval
+      const template = catalog.templates[args.action];
+      if (template?.approval_tier === "human-confirm") {
+        gcPending();
+
+        const proposalId = randomUUID();
+        const notifyUrl = `http://${gatewayHost}:${gatewayPort}/safeclaw/approval-notify?proposalId=${proposalId}`;
+
+        // Fire in background — NO abort signal, let it block in Validance
+        const promise = client.submitProposal({
+          action: args.action,
+          parameters: args.params,
+          session_hash: sHash,
+          workspace_path: workspacePath,
+          notify_url: notifyUrl,
+        });
+        promise.catch(() => {}); // Swallow unhandled rejection
+
+        // Store BEFORE the race check — webhook may arrive during the 500ms wait
+        pendingProposals.set(proposalId, {
+          promise,
+          approvalId: null,
+          action: args.action,
+          params: args.params,
+          createdAt: Date.now(),
+        });
+
+        // Quick check — did the kernel auto-approve server-side?
+        // (learned policy, ceiling override, or catalog mismatch)
+        const raceResult = await Promise.race([
+          promise.then((r) => ({ resolved: true as const, result: r })),
+          new Promise<{ resolved: false }>((r) =>
+            setTimeout(() => r({ resolved: false }), 500),
+          ),
+        ]);
+
+        if (raceResult.resolved) {
+          pendingProposals.delete(proposalId);
+          return {
+            content: [{ type: "text" as const, text: formatResult(raceResult.result) }],
+          };
+        }
+
+        return {
+          content: [{ type: "text" as const, text:
+            `Action requires approval: **${args.action}**\n` +
+            "```json\n" + JSON.stringify(args.params, null, 2) + "\n```\n" +
+            `To approve: \`/sc-approve ${proposalId} allow-once\`\n` +
+            `To always approve this pattern: \`/sc-approve ${proposalId} allow-always\`\n` +
+            `To deny: \`/sc-approve ${proposalId} deny\``,
+          }],
+        };
+      }
+
+      // Auto-approve path — blocks normally with abort signal
+      const notifyUrl = `http://${gatewayHost}:${gatewayPort}/safeclaw/approval-notify`;
 
       const result = await client.submitProposal(
         {
