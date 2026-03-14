@@ -22,12 +22,18 @@
         "type": "number",
         "default": 18789,
         "description": "OpenClaw gateway port (for approval webhook)"
+      },
+      "gatewayHost": {
+        "type": "string",
+        "default": "localhost",
+        "description": "Host/IP for approval webhook URL as seen from the Validance container (e.g. Docker bridge IP)"
       }
     }
   },
   "uiHints": {
     "kernelUrl": { "label": "Kernel URL", "placeholder": "http://localhost:7400" },
     "trustProfile": { "label": "Trust Profile" },
-    "gatewayPort": { "label": "Gateway Port" }
+    "gatewayPort": { "label": "Gateway Port" },
+    "gatewayHost": { "label": "Gateway Host", "placeholder": "localhost" }
   }
 }
