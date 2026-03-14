@@ -100,7 +100,7 @@ To deny: /sc-approve <id> deny
 
 ## Development
 
-See [docs/development.md](docs/development.md) for architecture details.
+See [docs/architecture.md](docs/architecture.md) for plugin architecture, [docs/risk-assessment.md](docs/risk-assessment.md) for security risks, and [docs/validance-integration.md](docs/validance-integration.md) for engine-specific details.
 
 ```bash
 npm install        # install dev dependencies
