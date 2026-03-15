@@ -67,4 +67,80 @@ describe("Catalog", () => {
     expect(desc).toContain("command");
     expect(desc).not.toContain("gateway");
   });
+
+  it("buildDescription renders tool description when present", () => {
+    const data: CatalogData = {
+      templates: {
+        exec: {
+          description: "Execute shell commands in a sandbox.",
+          parameter_schema: {
+            type: "object",
+            properties: { command: { type: "string" } },
+            required: ["command"],
+          },
+          approval_tier: "human-confirm",
+        },
+      },
+      images: {},
+    };
+    const desc = new Catalog(data, "standard").buildDescription();
+    expect(desc).toContain("## exec [requires approval]");
+    expect(desc).toContain("Execute shell commands in a sandbox.");
+  });
+
+  it("buildDescription renders action_hints and omits enum on action param", () => {
+    const data: CatalogData = {
+      templates: {
+        browser: {
+          description: "Control a headless browser.",
+          action_hints: {
+            "Navigation": "navigate, snapshot",
+            "Interaction": "click, type",
+          },
+          parameter_schema: {
+            type: "object",
+            properties: {
+              action: { type: "string", enum: ["navigate", "snapshot", "click", "type"], description: "Browser action" },
+              url: { type: "string", description: "URL to navigate to" },
+            },
+            required: ["action"],
+          },
+          approval_tier: "human-confirm",
+        },
+      },
+      images: {},
+    };
+    const desc = new Catalog(data, "standard").buildDescription();
+    // Action hints should be rendered as categories
+    expect(desc).toContain("Actions:");
+    expect(desc).toContain("  Navigation: navigate, snapshot");
+    expect(desc).toContain("  Interaction: click, type");
+    // action param should NOT have the enum values inline (they're in hints)
+    expect(desc).not.toContain("navigate | snapshot | click | type");
+    // action param should still show description
+    expect(desc).toContain("- action (required): Browser action");
+    // Other params render normally
+    expect(desc).toContain("- url: URL to navigate to");
+  });
+
+  it("buildDescription shows array item type", () => {
+    const data: CatalogData = {
+      templates: {
+        test: {
+          parameter_schema: {
+            type: "object",
+            properties: {
+              tags: { type: "array", items: { type: "string" } },
+              data: { type: "array" },
+            },
+          },
+          approval_tier: "auto-approve",
+        },
+      },
+      images: {},
+    };
+    const desc = new Catalog(data, "standard").buildDescription();
+    expect(desc).toContain("- tags (array of string)");
+    expect(desc).toContain("- data (array)");
+  });
 });

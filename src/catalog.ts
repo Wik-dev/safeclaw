@@ -10,6 +10,8 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export interface TemplateEntry {
+  description?: string;
+  action_hints?: Record<string, string>;
   persistent?: boolean;
   docker_image?: string;
   command_template?: string;
@@ -108,7 +110,8 @@ export class Catalog {
    *
    * Generates per-action documentation from parameter schemas so the LLM
    * knows exactly which actions are available and what parameters each takes.
-   * Includes parameter descriptions and enum values from the catalog JSON.
+   * Uses catalog `description` for tool summaries, `action_hints` for
+   * semantic action grouping, and shows array item types.
    */
   buildDescription(): string {
     const lines = [
@@ -124,6 +127,11 @@ export class Catalog {
         tier === "human-confirm" ? " [requires approval]" : "";
       lines.push("", `## ${name}${tierNote}`);
 
+      // Tool summary from catalog description
+      if (t.description) {
+        lines.push(t.description);
+      }
+
       const schema = t.parameter_schema;
       if (!schema || typeof schema !== "object") continue;
 
@@ -133,10 +141,27 @@ export class Catalog {
       const required: string[] = (schema as any).required ?? [];
       if (!props) continue;
 
+      // Action grouping from action_hints
+      const hasHints = t.action_hints && Object.keys(t.action_hints).length > 0;
+      if (hasHints) {
+        lines.push("Actions:");
+        for (const [category, actions] of Object.entries(t.action_hints!)) {
+          lines.push(`  ${category}: ${actions}`);
+        }
+      }
+
       for (const [pName, spec] of Object.entries(props)) {
         const req = required.includes(pName) ? " (required)" : "";
         const desc = (spec.description as string) ?? "";
         const enumVals = spec.enum as string[] | undefined;
+
+        // Skip enum values on action param when action_hints are shown
+        if (pName === "action" && hasHints && enumVals) {
+          let line = `- ${pName}${req}`;
+          if (desc) line += `: ${desc}`;
+          lines.push(line);
+          continue;
+        }
 
         let line = `- ${pName}${req}`;
         if (enumVals) {
@@ -146,7 +171,13 @@ export class Catalog {
           line += `: ${desc}`;
         } else {
           const type = (spec.type as string) ?? "any";
-          line += ` (${type})`;
+          // Array type hint: show items type
+          if (type === "array") {
+            const itemsType = (spec.items as Record<string, unknown> | undefined)?.type as string | undefined;
+            line += itemsType ? ` (array of ${itemsType})` : " (array)";
+          } else {
+            line += ` (${type})`;
+          }
         }
         lines.push(line);
       }

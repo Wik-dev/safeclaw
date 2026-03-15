@@ -1,6 +1,7 @@
 {
   "templates": {
     "exec": {
+      "description": "Execute shell commands in a sandboxed container with optional background mode.",
       "persistent": true,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/exec.py",
@@ -25,6 +26,7 @@
       }
     },
     "write": {
+      "description": "Write content to a file in the workspace.",
       "persistent": false,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/write_file.py",
@@ -44,6 +46,7 @@
       }
     },
     "edit": {
+      "description": "Find and replace text in a workspace file.",
       "persistent": false,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/edit_file.py",
@@ -64,6 +67,7 @@
       }
     },
     "apply_patch": {
+      "description": "Apply a multi-file patch using Begin Patch / End Patch format.",
       "persistent": false,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/apply_patch.py",
@@ -82,6 +86,13 @@
       }
     },
     "browser": {
+      "description": "Control a headless Chromium browser with persistent session. Navigate, interact, screenshot, and extract content from web pages.",
+      "action_hints": {
+        "Navigation": "navigate, snapshot, read_text, wait",
+        "Interaction": "click, type, hover, press, select, scroll, submit_form, upload, dialog",
+        "Inspection": "screenshot, evaluate, console, pdf",
+        "Tabs": "tabs, open, close, focus"
+      },
       "persistent": true,
       "docker_image": "browser",
       "command_template": "python /project/scripts/browser.py",
@@ -128,6 +139,7 @@
       "policy_ceilings": ["evaluate", "execute_js", "submit_form"]
     },
     "web_search": {
+      "description": "Search the web using Brave Search API with filtering by country, language, and date.",
       "persistent": false,
       "docker_image": "web",
       "command_template": "python /project/scripts/web_search.py",
@@ -151,6 +163,7 @@
       "network_policy": {"egress_allow": ["api.search.brave.com:443"]}
     },
     "web_fetch": {
+      "description": "Fetch a URL and extract content as markdown or plain text.",
       "persistent": false,
       "docker_image": "web",
       "command_template": "python /project/scripts/web_fetch.py",
@@ -172,6 +185,20 @@
       "network_policy": null
     },
     "message": {
+      "description": "Send and manage messages across channels (email, Telegram, Discord, Slack, Signal). Supports send/reply, polls, reactions, threads, stickers, moderation, and channel management.",
+      "action_hints": {
+        "Messaging": "send, reply, edit, unsend, delete, sendWithEffect, sendAttachment, broadcast",
+        "Reactions & Pins": "react, reactions, pin, unpin, list-pins",
+        "Polls": "poll, poll-vote",
+        "Threads": "thread-create, thread-list, thread-reply",
+        "Search & Fetch": "read, search, download-file",
+        "Groups": "renameGroup, setGroupIcon, addParticipant, removeParticipant, leaveGroup",
+        "Stickers & Emoji": "sticker, sticker-search, sticker-upload, emoji-list, emoji-upload",
+        "Channels": "channel-info, channel-list, channel-create, channel-edit, channel-delete, channel-move, category-create, category-edit, category-delete, topic-create",
+        "Moderation": "permissions, timeout, kick, ban, member-info, role-info, role-add, role-remove",
+        "Events": "event-list, event-create, voice-status",
+        "Presence": "set-presence"
+      },
       "persistent": false,
       "docker_image": "comms",
       "command_template": "python /project/scripts/message.py",
@@ -283,6 +310,7 @@
       "secret_refs": ["SMTP_PASSWORD"]
     },
     "sessions_send": {
+      "description": "Send a message to an active session and optionally wait for a response.",
       "persistent": false,
       "docker_image": "comms",
       "command_template": "python /project/scripts/sessions_send.py",
@@ -302,6 +330,7 @@
       "rate_limit": 50
     },
     "cron": {
+      "description": "Schedule, list, update, and manage recurring cron jobs.",
       "persistent": true,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/cron.py",
@@ -324,6 +353,7 @@
       "rate_limit": 10
     },
     "process": {
+      "description": "Manage background processes: list, poll status, view logs, kill, or remove.",
       "persistent": true,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/process.py",
@@ -342,6 +372,7 @@
       "rate_limit": 200
     },
     "image": {
+      "description": "Analyze images using vision AI. Accepts workspace paths, URLs, or data: URLs.",
       "persistent": false,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/image.py",
@@ -361,6 +392,7 @@
       "network_policy": null
     },
     "tts": {
+      "description": "Convert text to speech audio using a configurable voice.",
       "persistent": false,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/tts.py",
@@ -379,6 +411,7 @@
       "rate_limit": 50
     },
     "canvas": {
+      "description": "Present web content in the UI canvas, navigate, evaluate JavaScript, and take snapshots.",
       "persistent": false,
       "docker_image": "comms",
       "command_template": "python /project/scripts/canvas.py",
@@ -409,6 +442,15 @@
       "rate_limit": 30
     },
     "nodes": {
+      "description": "Interact with paired devices (nodes): camera, photos, screen recording, location, notifications, and remote commands.",
+      "action_hints": {
+        "Pairing": "status, describe, pending, approve, reject",
+        "Notifications": "notify, notifications_list, notifications_action",
+        "Camera & Media": "camera_snap, camera_list, camera_clip, photos_latest, screen_record",
+        "Location": "location_get",
+        "Device Info": "device_status, device_info, device_permissions, device_health",
+        "Execution": "run, invoke"
+      },
       "persistent": false,
       "docker_image": "comms",
       "command_template": "python /project/scripts/nodes.py",
