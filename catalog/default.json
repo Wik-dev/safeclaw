@@ -380,19 +380,33 @@
     },
     "canvas": {
       "persistent": false,
-      "docker_image": "sandbox",
+      "docker_image": "comms",
       "command_template": "python /project/scripts/canvas.py",
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "action": {"type": "string", "description": "Canvas action"},
-          "content": {"type": "string", "description": "Canvas content"}
+          "action": {"type": "string", "enum": ["present", "hide", "navigate", "eval", "snapshot", "a2ui_push", "a2ui_reset"], "description": "Canvas action to perform"},
+          "node": {"type": "string", "description": "Target node ID"},
+          "target": {"type": "string", "description": "URL for present/navigate"},
+          "url": {"type": "string", "description": "URL for present/navigate (alias for target)"},
+          "x": {"type": "number", "description": "Canvas X position"},
+          "y": {"type": "number", "description": "Canvas Y position"},
+          "width": {"type": "number", "description": "Canvas width in pixels"},
+          "height": {"type": "number", "description": "Canvas height in pixels"},
+          "javaScript": {"type": "string", "description": "JavaScript code to evaluate (eval action)"},
+          "outputFormat": {"type": "string", "enum": ["png", "jpg", "jpeg"], "description": "Snapshot image format (default: png)"},
+          "maxWidth": {"type": "number", "description": "Maximum snapshot width in pixels"},
+          "quality": {"type": "number", "description": "JPEG quality (0-100)"},
+          "delayMs": {"type": "number", "description": "Delay before snapshot in milliseconds"},
+          "jsonl": {"type": "string", "description": "JSONL content for A2UI push"},
+          "jsonlPath": {"type": "string", "description": "Path to JSONL file for A2UI push"},
+          "timeoutMs": {"type": "number", "description": "Gateway request timeout in milliseconds"}
         },
         "required": ["action"]
       },
-      "approval_tier": "auto-approve",
-      "timeout": 30,
-      "rate_limit": 100
+      "approval_tier": "human-confirm",
+      "timeout": 60,
+      "rate_limit": 30
     },
     "nodes": {
       "persistent": false,
