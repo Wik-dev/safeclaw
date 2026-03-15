@@ -53,7 +53,7 @@ safeclaw/
 │   ├── approval-handler.ts   # Webhook handler + resolver + safeclaw_check tool
 │   └── trust-profiles.ts     # conservative / standard / power-user tier overlays
 ├── catalog/
-│   └── default.json          # Tool catalog (15 templates, 4 Docker images)
+│   └── default.json          # Tool catalog (16 templates, 4 Docker images)
 ├── docker/
 │   └── docker-compose.yml    # Execution engine + PostgreSQL compose
 ├── bin/
@@ -82,35 +82,37 @@ safeclaw/
 
 ### 3.1 Single Meta-Tool Pattern
 
-SafeClaw registers **one tool** (`safeclaw`) with OpenClaw instead of 15 individual tools. The LLM calls `safeclaw({action, params})` and SafeClaw translates to a proposal request.
+SafeClaw registers **one tool** (`safeclaw`) with OpenClaw instead of 16 individual tools. The LLM calls `safeclaw({action, params})` and SafeClaw translates to a proposal request.
 
-Why one tool instead of 15:
+Why one tool instead of 16:
 - **Single decision point** — all actions go through the same approval/rate-limit/policy pipeline
 - **Uniform error handling** — one code path for all action types
 - **Catalog-driven** — adding a new action requires only a catalog entry, not a new tool registration
-- **Smaller tool surface** — the LLM sees one tool with an `action` enum, not 15 separate tool definitions
+- **Smaller tool surface** — the LLM sees one tool with an `action` enum, not 16 separate tool definitions
 
 A second tool, `safeclaw_check`, is registered for polling the result of pending (human-confirm) actions.
 
 ### 3.2 Tool Catalog
 
-The catalog (`catalog/default.json`) defines 15 templates across 4 Docker images and 3 approval tiers.
+The catalog (`catalog/default.json`) defines 16 templates across 4 Docker images and 3 approval tiers.
 
 | Action | Image | Approval Tier | Timeout | Rate Limit | Persistent | Notes |
 |--------|-------|---------------|---------|------------|------------|-------|
 | `exec` | sandbox | human-confirm | 120s | 200/session | Yes | Shell commands in /workspace |
 | `write` | sandbox | auto-approve | 30s | 500/session | No | Write file to workspace |
 | `edit` | sandbox | auto-approve | 30s | 500/session | No | Find-and-replace in file |
+| `apply_patch` | sandbox | auto-approve | 30s | 500/session | No | Apply unified patches |
 | `browser` | browser | human-confirm | 3600s | 30/session | Yes | Headless browser automation |
 | `web_search` | web | auto-approve | 30s | 100/session | No | Search API (needs SEARCH_API_KEY) |
 | `web_fetch` | web | auto-approve | 60s | 100/session | No | HTTP GET/POST |
-| `message` | comms | human-confirm | 30s | 20/session | No | Email/Slack (needs SMTP_PASSWORD) |
+| `message` | comms | human-confirm | 30s | 20/session | No | 53 actions, gateway proxy (needs SMTP_PASSWORD for email) |
 | `sessions_send` | comms | human-confirm | 30s | 50/session | No | Inter-session messaging |
-| `cron` | sandbox | human-confirm | 30s | 10/session | No | Schedule commands |
-| `image` | sandbox | auto-approve | 120s | 50/session | No | Image generation |
+| `cron` | sandbox | human-confirm | 30s | 10/session | Yes | Schedule commands (6 actions) |
+| `process` | sandbox | auto-approve | 30s | 200/session | Yes | Background process management |
+| `image` | sandbox | auto-approve | 120s | 50/session | No | Vision analysis (needs VISION_API_KEY) |
 | `tts` | sandbox | auto-approve | 60s | 50/session | No | Text-to-speech |
-| `canvas` | sandbox | auto-approve | 30s | 100/session | No | Canvas operations |
-| `nodes` | sandbox | auto-approve | 30s | 100/session | No | Node graph operations |
+| `canvas` | comms | human-confirm | 30s | 100/session | No | 7 actions, gateway proxy |
+| `nodes` | comms | human-confirm | 120s | 100/session | No | 20 actions, gateway proxy |
 | `gateway` | — | always-deny | — | — | — | Excluded from tool enum |
 
 **Docker images:**
