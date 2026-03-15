@@ -62,6 +62,24 @@
         "/workspace": {"host_path": "${WORKSPACE}", "mode": "rw"}
       }
     },
+    "apply_patch": {
+      "persistent": false,
+      "docker_image": "sandbox",
+      "command_template": "python /project/scripts/apply_patch.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "input": {"type": "string", "description": "Patch content using *** Begin Patch / *** End Patch format"}
+        },
+        "required": ["input"]
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 30,
+      "rate_limit": 500,
+      "volumes": {
+        "/workspace": {"host_path": "${WORKSPACE}", "mode": "rw"}
+      }
+    },
     "browser": {
       "persistent": true,
       "docker_image": "browser",
@@ -205,14 +223,16 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "prompt": {"type": "string", "description": "Image generation prompt"},
-          "size": {"type": "string", "description": "Image dimensions"}
-        },
-        "required": ["prompt"]
+          "prompt": {"type": "string", "description": "What to analyze in the image(s) (default: Describe the image.)"},
+          "image": {"type": "string", "description": "Image path (relative to workspace), URL, or data: URL"},
+          "images": {"type": "array", "items": {"type": "string"}, "description": "Multiple images to analyze (max 20)"}
+        }
       },
       "approval_tier": "auto-approve",
+      "secret_refs": ["VISION_API_KEY"],
       "timeout": 120,
-      "rate_limit": 50
+      "rate_limit": 50,
+      "network_policy": null
     },
     "tts": {
       "persistent": false,
