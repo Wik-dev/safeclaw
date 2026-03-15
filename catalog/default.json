@@ -104,6 +104,13 @@
           "values": {"type": "array", "items": {"type": "string"}, "description": "Values for select dropdown"},
           "paths": {"type": "array", "items": {"type": "string"}, "description": "File paths for upload"},
           "submit": {"type": "boolean", "description": "Press Enter after typing"},
+          "button": {"type": "string", "enum": ["left", "right", "middle"], "description": "Mouse button for click (default: left)"},
+          "doubleClick": {"type": "boolean", "description": "Double-click instead of single click"},
+          "promptText": {"type": "string", "description": "Text to enter in a prompt dialog before accepting"},
+          "textGone": {"type": "string", "description": "Wait until this text disappears from the page"},
+          "fn": {"type": "string", "description": "JavaScript function to evaluate (alias for script)"},
+          "type": {"type": "string", "enum": ["png", "jpeg"], "description": "Screenshot image format (default: png)"},
+          "level": {"type": "string", "description": "Filter console messages by level (log, warn, error)"},
           "timeMs": {"type": "number", "description": "Milliseconds to wait"},
           "timeoutMs": {"type": "number", "description": "Action timeout in ms"},
           "loadState": {"type": "string", "description": "Wait for page state (load, domcontentloaded, networkidle)"},
@@ -190,7 +197,10 @@
         "type": "object",
         "properties": {
           "session_key": {"type": "string", "description": "Target session key"},
-          "message": {"type": "string", "description": "Message to send"}
+          "message": {"type": "string", "description": "Message to send"},
+          "label": {"type": "string", "description": "Display label for the session"},
+          "agentId": {"type": "string", "description": "Agent identifier for the message"},
+          "timeoutSeconds": {"type": "number", "description": "Response timeout in seconds (default: 10)"}
         },
         "required": ["session_key", "message"]
       },
@@ -225,7 +235,8 @@
         "properties": {
           "prompt": {"type": "string", "description": "What to analyze in the image(s) (default: Describe the image.)"},
           "image": {"type": "string", "description": "Image path (relative to workspace), URL, or data: URL"},
-          "images": {"type": "array", "items": {"type": "string"}, "description": "Multiple images to analyze (max 20)"}
+          "images": {"type": "array", "items": {"type": "string"}, "description": "Multiple images to analyze (max 20)"},
+          "maxTokens": {"type": "number", "description": "Maximum tokens in the analysis response (default: 4096)"}
         }
       },
       "approval_tier": "auto-approve",
@@ -242,11 +253,13 @@
         "type": "object",
         "properties": {
           "text": {"type": "string", "description": "Text to synthesize"},
-          "voice": {"type": "string", "description": "Voice identifier"}
+          "voice": {"type": "string", "description": "Voice identifier"},
+          "channel": {"type": "string", "description": "Output channel (default: file)"}
         },
         "required": ["text"]
       },
       "approval_tier": "auto-approve",
+      "secret_refs": ["TTS_API_KEY"],
       "timeout": 60,
       "rate_limit": 50
     },
