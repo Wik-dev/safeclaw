@@ -96,8 +96,11 @@
         "properties": {
           "query": {"type": "string", "description": "Search query"},
           "count": {"type": "number", "description": "Number of results (1-10, default 5)"},
+          "country": {"type": "string", "description": "2-letter country code (e.g. US, DE, FR)"},
+          "language": {"type": "string", "description": "Language code (e.g. en, fr, de)"},
           "freshness": {"type": "string", "description": "Recency filter (d1=past day, w1=past week, m1=past month, y1=past year)"},
-          "language": {"type": "string", "description": "Language code (e.g. en, fr, de)"}
+          "date_after": {"type": "string", "description": "Only results after this date (YYYY-MM-DD)"},
+          "date_before": {"type": "string", "description": "Only results before this date (YYYY-MM-DD)"}
         },
         "required": ["query"]
       },
@@ -105,7 +108,7 @@
       "secret_refs": ["SEARCH_API_KEY"],
       "timeout": 30,
       "rate_limit": 100,
-      "network_policy": {"egress_allow": ["*.googleapis.com:443"]}
+      "network_policy": {"egress_allow": ["api.search.brave.com:443"]}
     },
     "web_fetch": {
       "persistent": false,
