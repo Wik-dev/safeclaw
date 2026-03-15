@@ -8,7 +8,9 @@
         "type": "object",
         "properties": {
           "command": {"type": "string", "description": "Shell command to execute"},
-          "cwd": {"type": "string", "description": "Working directory (relative to /workspace)"}
+          "cwd": {"type": "string", "description": "Working directory (relative to /workspace)"},
+          "env": {"type": "object", "description": "Environment variables to set"},
+          "timeout": {"type": "number", "description": "Timeout in seconds"}
         },
         "required": ["command"]
       },
@@ -92,7 +94,10 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "query": {"type": "string", "description": "Search query"}
+          "query": {"type": "string", "description": "Search query"},
+          "count": {"type": "number", "description": "Number of results (1-10, default 5)"},
+          "freshness": {"type": "string", "description": "Recency filter (d1=past day, w1=past week, m1=past month, y1=past year)"},
+          "language": {"type": "string", "description": "Language code (e.g. en, fr, de)"}
         },
         "required": ["query"]
       },
@@ -112,7 +117,9 @@
           "url": {"type": "string", "description": "URL to fetch"},
           "method": {"type": "string", "enum": ["GET", "POST"], "default": "GET"},
           "headers": {"type": "object", "description": "HTTP headers"},
-          "body": {"type": "string", "description": "Request body"}
+          "body": {"type": "string", "description": "Request body"},
+          "extractMode": {"type": "string", "enum": ["markdown", "text"], "default": "markdown", "description": "Content extraction format"},
+          "maxChars": {"type": "number", "description": "Maximum characters to return (truncates beyond this)"}
         },
         "required": ["url"]
       },
@@ -165,7 +172,8 @@
         "properties": {
           "schedule": {"type": "string", "description": "Cron expression"},
           "command": {"type": "string", "description": "Command to schedule"},
-          "action": {"type": "string", "enum": ["create", "list", "delete"]}
+          "action": {"type": "string", "enum": ["create", "list", "delete"]},
+          "jobId": {"type": "string", "description": "Job identifier (line number) for targeted delete"}
         },
         "required": ["action"]
       },
