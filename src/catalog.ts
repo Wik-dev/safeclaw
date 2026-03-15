@@ -107,35 +107,47 @@ export class Catalog {
    *
    * Generates per-action documentation from parameter schemas so the LLM
    * knows exactly which actions are available and what parameters each takes.
+   * Includes parameter descriptions and enum values from the catalog JSON.
    */
   buildDescription(): string {
     const lines = [
       "Execute actions in isolated containers via safeClaw.",
       "Each action runs in a Docker container — the host is never touched.",
-      "",
-      "Available actions:",
+      'Pass {action, params} where params contains the action-specific parameters below.',
     ];
 
     for (const name of this.actionNames()) {
       const t = this.templates[name];
       const tier = t.approval_tier;
       const tierNote =
-        tier === "human-confirm" ? " (requires approval)" : "";
-      lines.push(`  - ${name}${tierNote}`);
+        tier === "human-confirm" ? " [requires approval]" : "";
+      lines.push("", `## ${name}${tierNote}`);
 
-      // Document parameters from schema
       const schema = t.parameter_schema;
-      if (schema && typeof schema === "object") {
-        const props = (schema as any).properties;
-        const required: string[] = (schema as any).required ?? [];
-        if (props) {
-          for (const [pName, pSpec] of Object.entries(props)) {
-            const spec = pSpec as Record<string, unknown>;
-            const req = required.includes(pName) ? " (required)" : "";
-            const type = spec.type ?? "any";
-            lines.push(`      ${pName}: ${type}${req}`);
-          }
+      if (!schema || typeof schema !== "object") continue;
+
+      const props = (schema as any).properties as
+        | Record<string, Record<string, unknown>>
+        | undefined;
+      const required: string[] = (schema as any).required ?? [];
+      if (!props) continue;
+
+      for (const [pName, spec] of Object.entries(props)) {
+        const req = required.includes(pName) ? " (required)" : "";
+        const desc = (spec.description as string) ?? "";
+        const enumVals = spec.enum as string[] | undefined;
+
+        let line = `- ${pName}${req}`;
+        if (enumVals) {
+          line += `: ${enumVals.join(" | ")}`;
+          if (desc) line += ` — ${desc}`;
+        } else if (desc) {
+          line += `: ${desc}`;
+        } else {
+          const type = (spec.type as string) ?? "any";
+          line += ` (${type})`;
         }
+        lines.push(line);
       }
     }
 

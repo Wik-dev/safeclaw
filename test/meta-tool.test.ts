@@ -52,8 +52,16 @@ describe("createSafeClawTool", () => {
     }, "/workspace");
 
     expect(tool.name).toBe("safeclaw");
-    expect(tool.parameters.properties.action.enum).toContain("exec");
-    expect(tool.parameters.required).toEqual(["action", "params"]);
+    // oneOf schema: each entry has action.const matching an action name
+    const schemas = tool.parameters.oneOf as any[];
+    expect(schemas).toBeDefined();
+    expect(schemas.length).toBeGreaterThan(0);
+    const actionNames = schemas.map((s: any) => s.properties.action.const);
+    expect(actionNames).toContain("exec");
+    // Each entry requires both action and params
+    for (const s of schemas) {
+      expect(s.required).toEqual(["action", "params"]);
+    }
   });
 
   it("auto-approve: blocks and returns formatted result", async () => {

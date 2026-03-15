@@ -59,23 +59,46 @@ export function createSafeClawTool(
   const description = catalog.buildDescription();
   const actionNames = catalog.actionNames();
 
+  // Build per-action parameter schemas for structured LLM guidance.
+  // Each entry pairs the action enum value with its parameter schema,
+  // giving the LLM JSON Schema validation instead of just text.
+  const actionSchemas = actionNames.map((name) => {
+    const t = catalog.templates[name];
+    const paramSchema = t.parameter_schema;
+    const props =
+      paramSchema && typeof paramSchema === "object"
+        ? (paramSchema as any).properties ?? {}
+        : {};
+    const req: string[] =
+      paramSchema && typeof paramSchema === "object"
+        ? (paramSchema as any).required ?? []
+        : [];
+
+    // Exclude the "action" property from params (it's top-level)
+    const { action: _a, ...paramProps } = props;
+    const paramRequired = req.filter((r: string) => r !== "action");
+
+    return {
+      type: "object" as const,
+      properties: {
+        action: { type: "string" as const, const: name },
+        params: {
+          type: "object" as const,
+          properties: paramProps,
+          ...(paramRequired.length > 0
+            ? { required: paramRequired }
+            : {}),
+        },
+      },
+      required: ["action", "params"],
+    };
+  });
+
   return {
     name: "safeclaw",
     description,
     parameters: {
-      type: "object" as const,
-      properties: {
-        action: {
-          type: "string" as const,
-          enum: actionNames,
-          description: "The action to execute in a container",
-        },
-        params: {
-          type: "object" as const,
-          description: "Action-specific parameters",
-        },
-      },
-      required: ["action", "params"],
+      oneOf: actionSchemas,
     },
     execute: async (
       _toolCallId: string,
