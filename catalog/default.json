@@ -3,7 +3,7 @@
     "exec": {
       "persistent": true,
       "docker_image": "sandbox",
-      "command_template": "sh -c '{command}'",
+      "command_template": "python /project/scripts/exec.py",
       "parameter_schema": {
         "type": "object",
         "properties": {
@@ -24,7 +24,7 @@
     "write": {
       "persistent": false,
       "docker_image": "sandbox",
-      "command_template": "python /project/scripts/write_file.py '{path}'",
+      "command_template": "python /project/scripts/write_file.py",
       "parameter_schema": {
         "type": "object",
         "properties": {
@@ -43,7 +43,7 @@
     "edit": {
       "persistent": false,
       "docker_image": "sandbox",
-      "command_template": "python /project/scripts/edit_file.py '{path}'",
+      "command_template": "python /project/scripts/edit_file.py",
       "parameter_schema": {
         "type": "object",
         "properties": {
@@ -88,7 +88,7 @@
     "web_search": {
       "persistent": false,
       "docker_image": "web",
-      "command_template": "python /project/scripts/web_search.py '{query}'",
+      "command_template": "python /project/scripts/web_search.py",
       "parameter_schema": {
         "type": "object",
         "properties": {
@@ -105,7 +105,7 @@
     "web_fetch": {
       "persistent": false,
       "docker_image": "web",
-      "command_template": "python /project/scripts/web_fetch.py '{url}'",
+      "command_template": "python /project/scripts/web_fetch.py",
       "parameter_schema": {
         "type": "object",
         "properties": {
