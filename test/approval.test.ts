@@ -7,7 +7,8 @@ import {
 } from "../src/approval-handler.js";
 import { KernelClient } from "../src/kernel-client.js";
 import { pendingProposals } from "../src/pending-store.js";
-import type { ProposalResult } from "../src/kernel-client.js";
+import type { ProposalResult, ApprovalResolution } from "../src/kernel-client.js";
+import plugin from "../src/index.js";
 
 afterEach(() => {
   pendingProposals.clear();
@@ -188,5 +189,147 @@ describe("createApprovalCheckTool", () => {
 
     expect(result.content[0].text).toContain("[ERROR]");
     expect(result.content[0].text).toContain("Connection refused");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// /sc-approve decision paths — verify resolution construction
+// ---------------------------------------------------------------------------
+
+describe("/sc-approve decision paths", () => {
+  /** Register the plugin and capture the /sc-approve handler. */
+  function getScApproveHandler() {
+    let commandHandler: ((ctx: { args?: string }) => Promise<{ text: string }>) | null = null;
+
+    const mockApi: Record<string, any> = {
+      pluginConfig: { kernelUrl: "http://localhost:7400" },
+      registerTool: vi.fn(),
+      registerHttpRoute: vi.fn(),
+      registerGatewayMethod: vi.fn(),
+      registerCommand: vi.fn((cmd: any) => {
+        if (cmd.name === "sc-approve") commandHandler = cmd.handler;
+      }),
+      on: vi.fn(),
+    };
+
+    plugin.register(mockApi);
+    return commandHandler!;
+  }
+
+  /** Spy on KernelClient.resolveApproval via fetch mock, capturing the resolution body. */
+  function mockFetch(): { getCapturedResolution: () => ApprovalResolution | null } {
+    let captured: ApprovalResolution | null = null;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn(async (url: any, init: any) => {
+      const urlStr = String(url);
+      if (urlStr.includes("/api/approvals/") && urlStr.includes("/resolve")) {
+        captured = JSON.parse(init.body);
+        return { ok: true, json: async () => ({ status: "resolved" }) } as Response;
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    }) as any;
+    return {
+      getCapturedResolution: () => captured,
+    };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("allow-once: remember=false, no match_pattern", async () => {
+    const handler = getScApproveHandler();
+    const { getCapturedResolution } = mockFetch();
+
+    const completed: ProposalResult = {
+      status: "completed",
+      result: { output: "ok", output_vars: {}, exit_code: 0 },
+    };
+    pendingProposals.set("p-ao", {
+      promise: Promise.resolve(completed),
+      approvalId: "ap-1",
+      action: "exec",
+      params: { command: "git status" },
+      createdAt: Date.now(),
+    });
+
+    await handler({ args: "p-ao allow-once" });
+
+    const resolution = getCapturedResolution();
+    expect(resolution).not.toBeNull();
+    expect(resolution!.decision).toBe("approved");
+    expect(resolution!.remember).toBe(false);
+    expect(resolution!.match_pattern).toBeUndefined();
+  });
+
+  it("allow-always: remember=true + match_pattern present", async () => {
+    const handler = getScApproveHandler();
+    const { getCapturedResolution } = mockFetch();
+
+    const completed: ProposalResult = {
+      status: "completed",
+      result: { output: "ok", output_vars: {}, exit_code: 0 },
+    };
+    pendingProposals.set("p-aa", {
+      promise: Promise.resolve(completed),
+      approvalId: "ap-2",
+      action: "exec",
+      params: { command: "git status" },
+      createdAt: Date.now(),
+    });
+
+    await handler({ args: "p-aa allow-always" });
+
+    const resolution = getCapturedResolution();
+    expect(resolution).not.toBeNull();
+    expect(resolution!.decision).toBe("approved");
+    expect(resolution!.remember).toBe(true);
+    expect(resolution!.match_pattern).toEqual({ command: "git *" });
+  });
+
+  it("deny: decision=denied, remember=false, no match_pattern", async () => {
+    const handler = getScApproveHandler();
+    const { getCapturedResolution } = mockFetch();
+
+    pendingProposals.set("p-d", {
+      promise: new Promise(() => {}),
+      approvalId: "ap-3",
+      action: "exec",
+      params: { command: "rm -rf /" },
+      createdAt: Date.now(),
+    });
+
+    const result = await handler({ args: "p-d deny" });
+
+    const resolution = getCapturedResolution();
+    expect(resolution).not.toBeNull();
+    expect(resolution!.decision).toBe("denied");
+    expect(resolution!.remember).toBe(false);
+    expect(resolution!.match_pattern).toBeUndefined();
+    expect(result.text).toContain("Denied");
+    expect(result.text).not.toContain("remembered");
+  });
+
+  it("deny-always: decision=denied, remember=true + match_pattern", async () => {
+    const handler = getScApproveHandler();
+    const { getCapturedResolution } = mockFetch();
+
+    pendingProposals.set("p-da", {
+      promise: new Promise(() => {}),
+      approvalId: "ap-4",
+      action: "exec",
+      params: { command: "rm -rf /" },
+      createdAt: Date.now(),
+    });
+
+    const result = await handler({ args: "p-da deny-always" });
+
+    const resolution = getCapturedResolution();
+    expect(resolution).not.toBeNull();
+    expect(resolution!.decision).toBe("denied");
+    expect(resolution!.remember).toBe(true);
+    expect(resolution!.match_pattern).toEqual({ command: "rm *" });
+    expect(result.text).toContain("remembered");
+    expect(result.text).toContain("rm *");
   });
 });

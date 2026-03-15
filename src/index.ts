@@ -17,6 +17,7 @@ import {
   createApprovalCheckTool,
 } from "./approval-handler.js";
 import { pendingProposals } from "./pending-store.js";
+import { deriveMatchPattern } from "./match-patterns.js";
 import type { TrustProfile } from "./trust-profiles.js";
 
 export default {
@@ -90,6 +91,7 @@ export default {
           decision: isApprove ? "approved" : "denied",
           decided_by: "user",
           remember,
+          ...(remember ? { match_pattern: deriveMatchPattern(entry.action, entry.params) } : {}),
         };
 
         try {
@@ -100,7 +102,10 @@ export default {
 
         if (!isApprove) {
           pendingProposals.delete(proposalId);
-          return { text: `Denied: **${entry.action}**` };
+          const scope = remember
+            ? ` (remembered: ${JSON.stringify(resolution.match_pattern)})`
+            : "";
+          return { text: `Denied: **${entry.action}**${scope}` };
         }
 
         // Wait for execution result
