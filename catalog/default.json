@@ -69,12 +69,26 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "action": {"type": "string", "enum": ["navigate", "click", "type", "scroll", "screenshot", "execute_js", "submit_form", "read_text"]},
-          "url": {"type": "string"},
-          "selector": {"type": "string"},
-          "text": {"type": "string"},
-          "script": {"type": "string"},
-          "direction": {"type": "string", "enum": ["up", "down"]},
+          "action": {"type": "string", "enum": ["snapshot", "navigate", "click", "type", "hover", "press", "select", "scroll", "screenshot", "evaluate", "console", "wait", "tabs", "open", "close", "focus", "pdf", "dialog", "upload", "submit_form", "read_text"]},
+          "url": {"type": "string", "description": "URL for navigate/open"},
+          "ref": {"type": "string", "description": "Element ref from snapshot (e.g. e1, e2)"},
+          "selector": {"type": "string", "description": "CSS selector (alternative to ref)"},
+          "text": {"type": "string", "description": "Text to type or wait for"},
+          "key": {"type": "string", "description": "Keyboard key (e.g. Enter, Tab, ArrowDown)"},
+          "script": {"type": "string", "description": "JavaScript to evaluate"},
+          "direction": {"type": "string", "enum": ["up", "down"], "description": "Scroll direction"},
+          "fullPage": {"type": "boolean", "description": "Full page screenshot"},
+          "interactive": {"type": "boolean", "description": "Snapshot interactive elements only"},
+          "depth": {"type": "number", "description": "Max snapshot tree depth"},
+          "maxChars": {"type": "number", "description": "Max snapshot text length"},
+          "index": {"type": "number", "description": "Tab index for focus/close"},
+          "accept": {"type": "boolean", "description": "Accept or dismiss dialog"},
+          "values": {"type": "array", "items": {"type": "string"}, "description": "Values for select dropdown"},
+          "paths": {"type": "array", "items": {"type": "string"}, "description": "File paths for upload"},
+          "submit": {"type": "boolean", "description": "Press Enter after typing"},
+          "timeMs": {"type": "number", "description": "Milliseconds to wait"},
+          "timeoutMs": {"type": "number", "description": "Action timeout in ms"},
+          "loadState": {"type": "string", "description": "Wait for page state (load, domcontentloaded, networkidle)"},
           "subtype": {"type": "string", "description": "For policy ceiling checks"}
         },
         "required": ["action"]
@@ -85,7 +99,7 @@
       "volumes": {
         "/downloads": {"host_path": "${WORKSPACE}/downloads", "mode": "rw"}
       },
-      "policy_ceilings": ["execute_js", "submit_form"]
+      "policy_ceilings": ["evaluate", "execute_js", "submit_form"]
     },
     "web_search": {
       "persistent": false,
