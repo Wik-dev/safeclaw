@@ -44,6 +44,7 @@ const TRUST_OVERRIDES: Record<TrustProfile, Record<string, string>> = {
     message: "human-confirm",
     sessions_send: "human-confirm",
     cron: "human-confirm",
+    process: "human-confirm",
     image: "human-confirm",
     tts: "human-confirm",
     canvas: "human-confirm",

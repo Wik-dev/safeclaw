@@ -1,5 +1,5 @@
 {
-  "id": "@validance/safeclaw",
+  "id": "safeclaw",
   "name": "SafeClaw — Containerized Execution",
   "description": "Routes OpenClaw tool execution through Validance containers. Host is never touched.",
   "version": "0.1.0",

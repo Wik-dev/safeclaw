@@ -41,6 +41,7 @@ export const DENIED_TOOLS = [
   "web_search",
   "web_fetch",
   "cron",
+  "process",
   "canvas",
   "nodes",
   "gateway",

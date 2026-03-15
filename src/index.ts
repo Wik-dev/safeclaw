@@ -20,7 +20,7 @@ import { pendingProposals } from "./pending-store.js";
 import type { TrustProfile } from "./trust-profiles.js";
 
 export default {
-  id: "@validance/safeclaw",
+  id: "safeclaw",
 
   register(api: any) {
     const config: SafeClawConfig = (api.pluginConfig ?? {}) as SafeClawConfig;

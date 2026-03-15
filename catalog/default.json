@@ -10,7 +10,8 @@
           "command": {"type": "string", "description": "Shell command to execute"},
           "cwd": {"type": "string", "description": "Working directory (relative to /workspace)"},
           "env": {"type": "object", "description": "Environment variables to set"},
-          "timeout": {"type": "number", "description": "Timeout in seconds"}
+          "timeout": {"type": "number", "description": "Timeout in seconds"},
+          "background": {"type": "boolean", "description": "Run in background, return session ID immediately"}
         },
         "required": ["command"]
       },
@@ -234,22 +235,44 @@
       "rate_limit": 50
     },
     "cron": {
-      "persistent": false,
+      "persistent": true,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/cron.py",
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "schedule": {"type": "string", "description": "Cron expression"},
+          "action": {"type": "string", "enum": ["create", "list", "delete", "update", "run", "runs"], "description": "Cron action"},
+          "schedule": {"type": "string", "description": "Cron expression (e.g. */5 * * * *)"},
           "command": {"type": "string", "description": "Command to schedule"},
-          "action": {"type": "string", "enum": ["create", "list", "delete"]},
-          "jobId": {"type": "string", "description": "Job identifier (line number) for targeted delete"}
+          "jobId": {"type": "string", "description": "Job identifier (UUID)"},
+          "name": {"type": "string", "description": "Optional human-readable label for the job"},
+          "enabled": {"type": "boolean", "description": "Enable or disable the job (for update)"},
+          "limit": {"type": "number", "description": "Max entries to return (for runs, default 20)"},
+          "status": {"type": "string", "description": "Filter runs by status (ok or error)"}
         },
         "required": ["action"]
       },
       "approval_tier": "human-confirm",
       "timeout": 30,
       "rate_limit": 10
+    },
+    "process": {
+      "persistent": true,
+      "docker_image": "sandbox",
+      "command_template": "python /project/scripts/process.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "enum": ["list", "poll", "log", "kill", "remove"], "description": "Process management action"},
+          "sessionId": {"type": "string", "description": "Background session identifier"},
+          "offset": {"type": "number", "description": "Byte offset for log pagination"},
+          "limit": {"type": "number", "description": "Max bytes to return for log (default 50000)"}
+        },
+        "required": ["action"]
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 30,
+      "rate_limit": 200
     },
     "image": {
       "persistent": false,
