@@ -410,19 +410,52 @@
     },
     "nodes": {
       "persistent": false,
-      "docker_image": "sandbox",
+      "docker_image": "comms",
       "command_template": "python /project/scripts/nodes.py",
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "action": {"type": "string", "description": "Node graph action"},
-          "node_id": {"type": "string", "description": "Target node ID"}
+          "action": {"type": "string", "enum": ["status", "describe", "pending", "approve", "reject", "notify", "camera_snap", "camera_list", "camera_clip", "photos_latest", "screen_record", "location_get", "notifications_list", "notifications_action", "device_status", "device_info", "device_permissions", "device_health", "run", "invoke"], "description": "Node action to perform"},
+          "node": {"type": "string", "description": "Node identifier or query string"},
+          "requestId": {"type": "string", "description": "Pairing request ID (for approve/reject)"},
+          "title": {"type": "string", "description": "Notification title"},
+          "body": {"type": "string", "description": "Notification body"},
+          "sound": {"type": "string", "description": "Notification sound identifier"},
+          "priority": {"type": "string", "enum": ["passive", "active", "timeSensitive"], "description": "Notification priority"},
+          "delivery": {"type": "string", "enum": ["system", "overlay", "auto"], "description": "Notification delivery method"},
+          "facing": {"type": "string", "enum": ["front", "back", "both"], "description": "Camera facing direction"},
+          "maxWidth": {"type": "number", "description": "Maximum image width in pixels"},
+          "quality": {"type": "number", "description": "Image quality (0-1)"},
+          "delayMs": {"type": "number", "description": "Delay before capture in milliseconds"},
+          "deviceId": {"type": "string", "description": "Specific camera device ID"},
+          "limit": {"type": "number", "description": "Photo limit (1-20)"},
+          "duration": {"type": "string", "description": "Video duration string (e.g. 5s)"},
+          "durationMs": {"type": "number", "description": "Video duration in milliseconds (max 300000)"},
+          "includeAudio": {"type": "boolean", "description": "Include audio in video recording"},
+          "fps": {"type": "number", "description": "Screen recording frame rate"},
+          "screenIndex": {"type": "number", "description": "Screen index for recording (0-based)"},
+          "outPath": {"type": "string", "description": "Output file path for recording"},
+          "maxAgeMs": {"type": "number", "description": "Maximum age of cached location in ms"},
+          "locationTimeoutMs": {"type": "number", "description": "Location query timeout in ms"},
+          "desiredAccuracy": {"type": "string", "enum": ["coarse", "balanced", "precise"], "description": "Location accuracy level"},
+          "notificationAction": {"type": "string", "enum": ["open", "dismiss", "reply"], "description": "Notification action to perform"},
+          "notificationKey": {"type": "string", "description": "Notification identifier"},
+          "notificationReplyText": {"type": "string", "description": "Reply text for notification action"},
+          "command": {"type": "array", "items": {"type": "string"}, "description": "Command argv array (for run action)"},
+          "cwd": {"type": "string", "description": "Working directory for command"},
+          "env": {"type": "array", "items": {"type": "string"}, "description": "Environment variable pairs (KEY=VALUE)"},
+          "commandTimeoutMs": {"type": "number", "description": "Command execution timeout in ms"},
+          "invokeTimeoutMs": {"type": "number", "description": "Node invoke timeout in ms"},
+          "needsScreenRecording": {"type": "boolean", "description": "Whether command needs screen recording permission"},
+          "invokeCommand": {"type": "string", "description": "Custom invoke command name"},
+          "invokeParamsJson": {"type": "string", "description": "JSON-encoded parameters for invoke"},
+          "timeoutMs": {"type": "number", "description": "Gateway request timeout in milliseconds"}
         },
         "required": ["action"]
       },
-      "approval_tier": "auto-approve",
-      "timeout": 30,
-      "rate_limit": 100
+      "approval_tier": "human-confirm",
+      "timeout": 120,
+      "rate_limit": 30
     },
     "gateway": {
       "approval_tier": "always-deny"
