@@ -6,7 +6,7 @@
 
 ---
 
-**Related documents:** [architecture.md](architecture.md) · [requirements.md](requirements.md) · [validance-integration.md](validance-integration.md)
+**Related documents:** [architecture.md](architecture.md) · [requirements.md](requirements.md) · [validance-integration.md](validance-integration.md) · [openclaw-risk-assessment.md](openclaw-risk-assessment.md)
 
 ## 1. Why This Matters
 
@@ -60,4 +60,41 @@ What SafeClaw **does** protect against, with the mechanism that provides the pro
 - **Multi-user abuse** — SafeClaw is designed for single-user personal assistants. Rate limits and session isolation assume a trusted operator (SA-009).
 - **Persistent data exfiltration** — containers with network access (web, comms, browser) can exfiltrate data from mounted volumes. Network policies in the catalog mitigate this partially (`web_search` restricts egress to `*.googleapis.com:443`), but `web_fetch` and `browser` have unrestricted egress.
 - **Chrome profile automation** — the `chrome` browser profile (distinct from the `browser` container action) controls the user's existing Chrome browser via extension relay. This cannot be containerized and is explicitly excluded from SafeClaw's scope. Users who need this should NOT deny `browser` in their config.
+
+## 5. OpenClaw Native Risks Mitigated by SafeClaw
+
+OpenClaw has its own risk surface independent of SafeClaw. The full assessment is in [openclaw-risk-assessment.md](openclaw-risk-assessment.md). This section maps the risks that SafeClaw directly or partially mitigates.
+
+### Directly mitigated
+
+| OpenClaw Risk | Severity | SafeClaw Mitigation | Mechanism |
+| --- | --- | --- | --- |
+| **C1 — Prompt injection + tool access.** OpenClaw declares prompt injection out of scope (SECURITY.md). Detection is logging-only, never blocks. Injected content reaches the LLM with full tool access. | Critical | SafeClaw gates every dangerous action through the approval pipeline. Prompt injection can trick the LLM into *requesting* an action, but cannot bypass the approval gate. The attack surface shifts from "injection → execution" to "injection → proposal → human decision." | Approval gate (engine pipeline stage 4). Human-confirm actions block until `/sc-approve`. LLM cannot invoke `/sc-approve` (it is a command, not a tool). |
+| **C5 — Arbitrary browser JavaScript execution.** Browser tool can navigate URLs, click, type, and execute arbitrary JS in page context — accessing cookies, localStorage, session data. Combined with C1, an attacker could instruct the LLM to exfiltrate browser session data. | Critical | Browser actions route through the catalog as `human-confirm` tier proposals. The LLM cannot silently execute browser JS — each action requires explicit user approval. Browser runs in an isolated container, not the user's browser profile. | Catalog tier: `browser` → `human-confirm`. Container isolation: separate Docker image with no access to host browser state. |
+| **M1 — Secrets stored in plaintext.** API keys stored unencrypted in `~/.openclaw/auth-profiles.json`. Config audit log captures diffs that may contain secrets. | Major | Validance SecretStore injects credentials at worker execution time directly into the container environment. Secrets never pass through SafeClaw, never enter OpenClaw config, never appear in LLM context. | Engine pipeline stage 5 (secret injection). `secret_refs` in catalog templates. Plugin config contains zero secrets. |
+| **M8 — Filesystem protection opt-in.** `tools.fs.workspaceOnly` defaults to not enforced. Default installs have unrestricted file access. | Major | SafeClaw routes all file operations (write, edit, apply_patch) through containers with scoped volume mounts. The host filesystem is never directly accessible regardless of OpenClaw's defaults. | Catalog `volumes` field per template. Write/edit containers mount only `/workspace` (rw). No host path traversal possible from inside the container. |
+
+### Partially mitigated
+
+| OpenClaw Risk | Severity | SafeClaw Mitigation | Residual Risk |
+| --- | --- | --- | --- |
+| **C3 — No message ingest rate limiting.** No rate limiting on incoming messages from any channel. Flooding causes CPU exhaustion and LLM API cost. | Critical | SafeClaw rate-limits *tool execution* (proposals per session per template). An attacker can flood messages, but the agent cannot act on them at unbounded speed — proposal rate limits cap the damage. | Message ingest and LLM token consumption are not SafeClaw's layer. Flooding still burns LLM API cost even if tool actions are throttled. |
+| **M3 — Logging redaction opt-in.** Secrets in message content and config writes are not redacted unless explicitly configured. | Major | Validance maintains its own audit trail for all proposals and decisions. Tool execution details are logged engine-side with structured metadata, not as raw text. | OpenClaw's own logging is unchanged. SafeClaw does not modify or replace OpenClaw's log pipeline. Both audit systems coexist. |
+| **M5 — Memory exhaustion via unbounded caches.** Web fetch cache, draft buffers, rate limiter maps grow without bounds. | Major | SafeClaw rate limits and budget caps prevent runaway tool execution loops that could compound memory pressure. | OpenClaw's internal caches and buffers are not SafeClaw's layer. The mitigation prevents tool-driven amplification, not the root cause. |
+
+### Not mitigated
+
+These OpenClaw risks are outside SafeClaw's scope entirely:
+
+| OpenClaw Risk | Why SafeClaw cannot help |
+| --- | --- |
+| **C2 — Plugins run in-process with full OS privileges** | SafeClaw *is* a plugin running in-process. It is subject to this risk, not a mitigation for it. |
+| **C4 — Unofficial WhatsApp API (Baileys)** | Channel-layer risk. SafeClaw operates at the tool execution layer. |
+| **M2 — PII sent to LLM providers without masking** | Happens before tool execution — SafeClaw sees actions, not conversation content. |
+| **M4 — DNS rebinding in SSRF guard** | OpenClaw infrastructure. SafeClaw's containers have their own network policies but do not fix the gateway's SSRF handling. |
+| **M6/M7 — Supply chain (Dockerfile pipe-to-shell, CI actions not SHA-pinned)** | OpenClaw build pipeline. SafeClaw has its own Docker images but cannot harden OpenClaw's. |
+| **M9 — Gateway password stored without hashing** | Gateway auth layer. Outside SafeClaw's scope. |
+| **M10 — WebSocket origin validation gap** | Gateway transport layer. Outside SafeClaw's scope. |
+| **M11 — No automatic migration rollback** | OpenClaw config/state management. Outside SafeClaw's scope. |
+| **M12 — Sandbox VNC unencrypted** | OpenClaw's own sandbox infrastructure. SafeClaw's browser container is separate. |
 
