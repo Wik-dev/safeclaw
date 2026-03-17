@@ -21,7 +21,7 @@
  *   "ls"               → "ls"
  *   ""                 → "*"
  */
-function commandPrefix(command: string): string {
+export function commandPrefix(command: string): string {
   const trimmed = command.trim();
   if (!trimmed) return "*";
   const firstToken = trimmed.split(/\s+/)[0];
@@ -39,7 +39,7 @@ function commandPrefix(command: string): string {
  *   "docs/api/README.md"    → "docs/api/*"
  *   "file.txt"              → "*"
  */
-function directoryPrefix(filePath: string): string {
+export function directoryPrefix(filePath: string): string {
   const lastSlash = filePath.lastIndexOf("/");
   if (lastSlash === -1) return "*";
   return filePath.slice(0, lastSlash) + "/*";
@@ -54,7 +54,7 @@ function directoryPrefix(filePath: string): string {
  *   "http://localhost:3000/path"    → "http://localhost:3000/*"
  *   "not-a-url"                     → "*"
  */
-function urlOrigin(url: string): string {
+export function urlOrigin(url: string): string {
   try {
     const parsed = new URL(url);
     return `${parsed.origin}/*`;

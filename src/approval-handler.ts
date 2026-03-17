@@ -33,7 +33,7 @@ function readBody(req: IncomingMessage): Promise<string> {
 }
 
 /** Extract query parameter from a URL path string. */
-function getQueryParam(url: string | undefined, key: string): string | null {
+export function getQueryParam(url: string | undefined, key: string): string | null {
   if (!url) return null;
   const idx = url.indexOf("?");
   if (idx === -1) return null;
@@ -138,7 +138,7 @@ export function createApprovalResolver(client: KernelClient) {
 }
 
 /** Wait for a promise with a timeout, returning null on timeout. */
-function raceTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+export function raceTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
   return Promise.race([
     promise,
     new Promise<null>((r) => setTimeout(() => r(null), ms)),
