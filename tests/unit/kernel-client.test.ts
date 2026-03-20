@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { KernelClient } from "../src/kernel-client.js";
+import { KernelClient } from "../../src/kernel-client.js";
 
 describe("KernelClient", () => {
   let client: KernelClient;
@@ -20,7 +20,6 @@ describe("KernelClient", () => {
   });
 
   it("submitProposal throws on non-200 response", async () => {
-    // Mock fetch to return 400
     const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,

@@ -2,25 +2,53 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { pendingProposals, gcPending } from "../../src/pending-store.js";
 import type { PendingEntry } from "../../src/pending-store.js";
 
-function makeEntry(createdAt: number): PendingEntry {
+function makeEntry(overrides?: Partial<PendingEntry>): PendingEntry {
   return {
-    promise: new Promise(() => {}), // never resolves — doesn't matter for GC
+    promise: new Promise(() => {}),
     approvalId: null,
     action: "exec",
     params: { command: "test" },
-    createdAt,
+    createdAt: Date.now(),
+    ...overrides,
   };
 }
 
-describe("gcPending", () => {
-  beforeEach(() => {
-    pendingProposals.clear();
+beforeEach(() => {
+  pendingProposals.clear();
+});
+
+// ---------------------------------------------------------------------------
+// Store / retrieve basics
+// ---------------------------------------------------------------------------
+
+describe("pendingProposals", () => {
+  it("stores and retrieves entries", () => {
+    const entry = makeEntry();
+    pendingProposals.set("abc", entry);
+
+    expect(pendingProposals.get("abc")).toBe(entry);
+    expect(pendingProposals.size).toBe(1);
   });
 
+  it("links approvalId from webhook", () => {
+    const entry = makeEntry();
+    pendingProposals.set("abc", entry);
+
+    entry.approvalId = "kernel-approval-123";
+    expect(pendingProposals.get("abc")!.approvalId).toBe("kernel-approval-123");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Garbage collection
+// ---------------------------------------------------------------------------
+
+describe("gcPending", () => {
+
   it("removes entries older than 10 minutes", () => {
-    const old = Date.now() - 700_000; // ~11.6 min ago
-    pendingProposals.set("old-1", makeEntry(old));
-    pendingProposals.set("old-2", makeEntry(old));
+    const old = Date.now() - 700_000;
+    pendingProposals.set("old-1", makeEntry({ createdAt: old }));
+    pendingProposals.set("old-2", makeEntry({ createdAt: old }));
 
     gcPending();
 
@@ -28,8 +56,7 @@ describe("gcPending", () => {
   });
 
   it("retains entries newer than 10 minutes", () => {
-    const recent = Date.now() - 300_000; // 5 min ago
-    pendingProposals.set("recent-1", makeEntry(recent));
+    pendingProposals.set("recent-1", makeEntry({ createdAt: Date.now() - 300_000 }));
 
     gcPending();
 
@@ -37,11 +64,8 @@ describe("gcPending", () => {
   });
 
   it("removes old entries while retaining recent ones", () => {
-    const old = Date.now() - 700_000;
-    const recent = Date.now() - 100_000;
-
-    pendingProposals.set("old", makeEntry(old));
-    pendingProposals.set("recent", makeEntry(recent));
+    pendingProposals.set("old", makeEntry({ createdAt: Date.now() - 700_000 }));
+    pendingProposals.set("recent", makeEntry({ createdAt: Date.now() - 100_000 }));
 
     gcPending();
 
@@ -54,21 +78,16 @@ describe("gcPending", () => {
     expect(() => gcPending()).not.toThrow();
   });
 
-  it("entry at exactly 10 minutes is removed (boundary)", () => {
-    const exactly10min = Date.now() - 600_000;
-    pendingProposals.set("boundary", makeEntry(exactly10min));
+  it("entry at exactly 10 minutes is retained (strict less-than)", () => {
+    pendingProposals.set("boundary", makeEntry({ createdAt: Date.now() - 600_000 }));
 
     gcPending();
 
-    // cutoff = Date.now() - 600_000; entry.createdAt < cutoff
-    // At exactly the cutoff, createdAt is NOT < cutoff, so it's retained
-    // (the comparison is strict less-than)
     expect(pendingProposals.has("boundary")).toBe(true);
   });
 
   it("entry just past 10 minutes is removed", () => {
-    const justPast = Date.now() - 600_001;
-    pendingProposals.set("past", makeEntry(justPast));
+    pendingProposals.set("past", makeEntry({ createdAt: Date.now() - 600_001 }));
 
     gcPending();
 

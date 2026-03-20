@@ -1,6 +1,62 @@
 import { describe, it, expect } from "vitest";
-import { formatResult } from "../../src/meta-tool.js";
+import { formatResult, createSafeClawTool } from "../../src/meta-tool.js";
+import { Catalog, type CatalogData } from "../../src/catalog.js";
+import { KernelClient } from "../../src/kernel-client.js";
 import type { ProposalResult } from "../../src/kernel-client.js";
+
+// ---------------------------------------------------------------------------
+// Tool shape
+// ---------------------------------------------------------------------------
+
+describe("createSafeClawTool shape", () => {
+  const FIXTURE: CatalogData = {
+    templates: {
+      exec: {
+        approval_tier: "human-confirm",
+        parameter_schema: {
+          type: "object",
+          properties: { command: { type: "string" } },
+          required: ["command"],
+        },
+      },
+      write: {
+        approval_tier: "auto-approve",
+        parameter_schema: {
+          type: "object",
+          properties: {
+            path: { type: "string" },
+            content: { type: "string" },
+          },
+          required: ["path", "content"],
+        },
+      },
+    },
+    images: {},
+  };
+
+  it("creates a tool named 'safeclaw' with oneOf parameter schema", () => {
+    const client = new KernelClient("http://localhost:7400");
+    const catalog = new Catalog(FIXTURE, "standard");
+    const tool = createSafeClawTool(client, catalog, { kernelUrl: "http://localhost:7400" }, "/ws");
+
+    expect(tool.name).toBe("safeclaw");
+
+    const schemas = tool.parameters.oneOf as any[];
+    expect(schemas).toBeDefined();
+    expect(schemas.length).toBe(2);
+
+    const actionNames = schemas.map((s: any) => s.properties.action.const).sort();
+    expect(actionNames).toEqual(["exec", "write"]);
+
+    for (const s of schemas) {
+      expect(s.required).toEqual(["action", "params"]);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatResult
+// ---------------------------------------------------------------------------
 
 describe("formatResult", () => {
   it("denied → [DENIED] with reason", () => {

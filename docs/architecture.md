@@ -58,19 +58,19 @@ safeclaw/
 │   └── docker-compose.yml    # Execution engine + PostgreSQL compose
 ├── bin/
 │   └── safeclaw.mjs          # CLI: npx @validance/safeclaw start|stop|logs
-├── test/
-│   ├── kernel-client.test.ts # HTTP client tests (4 tests)
-│   ├── catalog.test.ts       # Catalog + trust profile tests (5 tests)
-│   ├── meta-tool.test.ts     # Meta-tool tests (5 tests)
-│   ├── approval.test.ts      # Approval handler + check tool tests (10 tests)
-│   └── pending-store.test.ts # Pending store + GC tests (4 tests)
+├── tests/
+│   ├── unit/                  # Vitest unit tests (no HTTP)
+│   ├── integration/           # Plugin → live Validance API tests
+│   ├── test_api_e2e.py        # Python API E2E tests (25 tests)
+│   ├── test-procedure.md      # Repeatable test plan
+│   ├── test-log.md            # Test execution records
+│   └── E2E_TEST_RESULTS.md    # API E2E test results
 ├── docs/
 │   ├── architecture.md       # This document
 │   ├── validance-integration.md  # Engine-specific integration details
 │   ├── requirements.md       # Functional and non-functional requirements
 │   ├── risk-assessment.md    # Security risk register
-│   ├── development-plan.md   # Implementation roadmap
-│   └── test-procedure.md     # Test execution procedures
+│   └── development-plan.md   # Implementation roadmap
 ├── openclaw.plugin.json      # Plugin manifest (required by OpenClaw)
 ├── package.json              # @validance/safeclaw npm package
 ├── tsconfig.json             # TypeScript config (ES2022, strict)
