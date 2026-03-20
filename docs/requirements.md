@@ -52,10 +52,25 @@
 | NFR-007 | Pending store bounded by GC        | 10-minute TTL                          | No max entry count — time-based GC only (see [SA-003](risk-assessment.md))      |
 | NFR-008 | Build output                       | `dist/` directory, CommonJS-compatible | `tsc` produces `.js` + `.d.ts`                                                  |
 | NFR-009 | Package distributable via npm      | `npm pack` / `npm publish`             | `files: [dist/, catalog/, docker/, bin/]`                                       |
-| NFR-010 | Test suite passes                  | 28 tests (vitest)                      | kernel-client (4), catalog (5), meta-tool (5), approval (10), pending-store (4) |
+| NFR-010 | Test suite passes                  | 52+ tests (vitest)                     | See `test/` directory for full breakdown                                        |
 
 
-## 3. Compatibility
+## 3. Host Filesystem Access (Future)
+
+Requirements for the planned workspace mount feature. **Not implemented — not a blocker for v0.1.0 distribution.**
+
+| ID      | Requirement                                                                                       | Priority | Notes                                                                         |
+| ------- | ------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| FR-030  | User-declared workspace mounts via plugin config (`workspace.mounts[]`)                           | Must     | Only explicitly listed host paths are mountable into containers                |
+| FR-031  | Never-mount list (`workspace.never_mount[]`) with sensible defaults                               | Must     | `~/.ssh`, `~/.gnupg`, `~/.aws`, `**/.env`, `**/node_modules` etc.            |
+| FR-032  | Read-only mount by default; write requires explicit `mode: "rw"` in config                        | Must     | Defense-in-depth: accidental write exposure prevented at config level          |
+| FR-033  | Never-mount list takes precedence over mounts (even if parent is mounted)                         | Must     | `.ssh` excluded even if `~` is mounted                                        |
+| FR-034  | Approval escalation for write-mode mounts on sensitive parent paths                               | Should   | `human-confirm` tier override regardless of trust profile                     |
+| FR-035  | LLM cannot request or modify mount configuration                                                  | Must     | Mounts are user-declared in config only, never agent-controlled               |
+| NFR-011 | Workspace mount feature must not weaken existing container isolation guarantees                    | Must     | Network policies, resource limits, approval gates unchanged                   |
+
+
+## 4. Compatibility
 
 ### OpenClaw
 

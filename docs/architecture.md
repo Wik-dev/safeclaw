@@ -372,3 +372,53 @@ See [risk-assessment.md](risk-assessment.md) for the full risk register. Key lim
 ```
 
 The LLM is untrusted input. It can call `safeclaw()` and `safeclaw_check()` tools, but cannot issue `/sc-approve` commands, access the pending store directly, or bypass approval gates. The user controls all approval decisions through the deterministic command interface.
+
+## 11. Host Filesystem Access Model
+
+### Current State: Pure Isolation
+
+Today, containers mount only engine-managed volumes (`/workspace`, `/home` read-only for exec). The host filesystem is never directly accessible. This provides strong isolation but limits usefulness — the agent cannot read or modify the user's actual project files.
+
+### The Tension
+
+Pure container isolation is safe but impractical for many real-world tasks: code editing, running tests against a local codebase, reading config files. Users who need host file access today must either (a) use OpenClaw's native tools (which SafeClaw denies) or (b) manually copy files into/out of containers.
+
+This is the core product tension: **isolation guarantees safety; host access enables utility.** The solution must preserve SafeClaw's security model while providing controlled access to user-declared paths.
+
+### Planned Approach: User-Declared Workspace Mounts
+
+The design direction (not yet implemented) uses explicit, user-declared workspace mounts:
+
+```yaml
+# OpenClaw plugin config (future)
+plugins:
+  entries:
+    "@validance/safeclaw":
+      config:
+        workspace:
+          mounts:
+            - host: "/home/user/project"
+              container: "/workspace/project"
+              mode: "ro"             # read-only by default
+          never_mount:
+            - "~/.ssh"
+            - "~/.gnupg"
+            - "~/.aws"
+            - "**/node_modules"
+            - "**/.env"
+```
+
+**Security layers (defense-in-depth):**
+
+1. **User declaration** — only explicitly listed paths are mountable. No implicit host access.
+2. **Never-mount list** — sensitive paths (credentials, keys, secrets) are excluded even if a parent is mounted. Ships with sensible defaults, user-extensible.
+3. **Read-only default** — mounts are `ro` unless the user explicitly opts into `rw`.
+4. **Approval escalation** — write-mode mounts on sensitive parent paths trigger `human-confirm` regardless of trust profile.
+5. **Container isolation preserved** — mounts are bind-mounted into the existing container infrastructure. All other isolation guarantees (network policies, resource limits, approval gates) remain unchanged.
+
+**What this does NOT do:**
+- Grant containers access to arbitrary host paths
+- Override the never-mount list programmatically
+- Allow the LLM to request mounts — only the user declares them in config
+
+This feature is tracked as future work and is **not a blocker for initial distribution**. See [risk-assessment.md § SA-013](risk-assessment.md) for the associated risks and [development-plan.md](development-plan.md) for status.
