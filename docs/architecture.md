@@ -331,7 +331,8 @@ SafeClaw communicates with the execution engine via these REST endpoints. The en
 - **Volume isolation** — containers mount only the workspace directory (and `/home` read-only for exec). No access to host system files, other users' data, or the plugin process.
 - **Approval gates** — human-confirm actions cannot execute without explicit user decision via `/sc-approve` or learned policy match.
 - **Rate limiting** — per-session, per-action rate limits enforced by the execution engine. Prevents runaway tool loops.
-- **Learned policies** — `allow-always`/`deny-always` create rules that persist in-memory for the session, reducing approval fatigue without removing control.
+- **Learned policies** — `allow-always`/`deny-always` create rules that persist to the database across sessions, reducing approval fatigue without removing control.
+- **Non-root containers** — task containers run as `worker` (uid 1000) via the Dockerfile `USER` directive. The engine respects this when `(proposal-pipeline mode)` (proposal-pipeline mode). `/etc/shadow` and other root-owned files are inaccessible inside containers.
 - **Secret isolation** — secrets (API keys, credentials) are injected by the engine at execution time. They never pass through the plugin or the LLM.
 - **Action exclusion** — always-deny actions are removed from the tool enum. The LLM cannot call them.
 - **Deterministic approval** — `/sc-approve` is a plugin command, not a tool. The LLM cannot invoke it or influence the approval decision.
@@ -340,9 +341,8 @@ SafeClaw communicates with the execution engine via these REST endpoints. The en
 
 See [risk-assessment.md](risk-assessment.md) for the full risk register. Key limitations:
 
-- Exec runs as root inside containers (container-only exposure, no host access)
 - Pending store is unbounded (time-based GC only, no max size)
-- In-memory state lost on gateway restart (pending proposals, session cache, learned policies)
+- In-memory state lost on gateway restart (pending proposals, session cache)
 - No TLS on the webhook path (localhost assumed)
 - Rate limits are per-session, not global
 - No request signing between plugin and engine
