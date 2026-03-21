@@ -107,7 +107,7 @@ export function createSafeClawTool(
       _onUpdate?: (update: unknown) => void,
     ) => {
       const sHash = sessionHash(
-        (args as any)._sessionKey ?? "default",
+        (args as any)._agentId ?? (args as any)._sessionKey ?? "default",
       );
 
       const gatewayPort = config.gatewayPort ?? 18789;

@@ -405,3 +405,108 @@ describe("/sc-approve decision paths", () => {
     expect(result.text).toContain("rm *");
   });
 });
+
+// ---------------------------------------------------------------------------
+// /sc-policies command — verify list + revoke
+// ---------------------------------------------------------------------------
+
+describe("/sc-policies command", () => {
+  function getScPoliciesHandler() {
+    let commandHandler: ((ctx: { args?: string }) => Promise<{ text: string }>) | null = null;
+
+    const mockApi: Record<string, any> = {
+      pluginConfig: { kernelUrl: "http://localhost:7400" },
+      registerTool: vi.fn(),
+      registerHttpRoute: vi.fn(),
+      registerGatewayMethod: vi.fn(),
+      registerCommand: vi.fn((cmd: any) => {
+        if (cmd.name === "sc-policies") commandHandler = cmd.handler;
+      }),
+      on: vi.fn(),
+    };
+
+    plugin.register(mockApi);
+    return commandHandler!;
+  }
+
+  const originalFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
+
+  it("lists rules in table format", async () => {
+    const handler = getScPoliciesHandler();
+    globalThis.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        rules: [
+          {
+            rule_id: "abc12345-full-uuid",
+            template_name: "exec",
+            match_pattern: { command: "git *" },
+            scope: "allow",
+            created_from: "test",
+            created_at: new Date(Date.now() - 3600_000).toISOString(),
+          },
+        ],
+      }),
+    })) as any;
+
+    const result = await handler({ args: "" });
+    expect(result.text).toContain("Learned policy rules");
+    expect(result.text).toContain("abc12345");
+    expect(result.text).toContain("exec");
+    expect(result.text).toContain("allow");
+    expect(result.text).toContain("git *");
+    expect(result.text).toContain("1h");
+  });
+
+  it("shows empty message when no rules", async () => {
+    const handler = getScPoliciesHandler();
+    globalThis.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ rules: [] }),
+    })) as any;
+
+    const result = await handler({ args: "" });
+    expect(result.text).toBe("No learned policy rules.");
+  });
+
+  it("revokes a rule by ID", async () => {
+    const handler = getScPoliciesHandler();
+    let deletedPath: string | null = null;
+    globalThis.fetch = vi.fn(async (url: any, init: any) => {
+      const urlStr = String(url);
+      if (init?.method === "DELETE" && urlStr.includes("/api/policies/")) {
+        deletedPath = urlStr;
+        return { ok: true, json: async () => ({ deleted: true }) } as Response;
+      }
+      return { ok: true, json: async () => ({}) } as Response;
+    }) as any;
+
+    const result = await handler({ args: "revoke rule-xyz" });
+    expect(result.text).toContain("rule-xyz");
+    expect(result.text).toContain("revoked");
+    expect(deletedPath).toContain("/api/policies/rule-xyz");
+  });
+
+  it("returns usage when revoke has no rule ID", async () => {
+    const handler = getScPoliciesHandler();
+    const result = await handler({ args: "revoke" });
+    expect(result.text).toContain("Usage");
+  });
+
+  it("handles API errors gracefully", async () => {
+    const handler = getScPoliciesHandler();
+    globalThis.fetch = vi.fn(async () => ({
+      ok: false,
+      status: 500,
+      text: async () => "Internal Server Error",
+    })) as any;
+
+    const result = await handler({ args: "" });
+    expect(result.text).toContain("Failed to list policies");
+  });
+});

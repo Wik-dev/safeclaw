@@ -8,7 +8,7 @@
  *   - Health check on gateway start
  */
 
-import { KernelClient, type ApprovalResolution } from "./kernel-client.js";
+import { KernelClient, type ApprovalResolution, type LearnedRule } from "./kernel-client.js";
 import { Catalog } from "./catalog.js";
 import { createSafeClawTool, type SafeClawConfig, formatResult } from "./meta-tool.js";
 import {
@@ -129,7 +129,53 @@ export default {
       },
     });
 
-    // 6. Health check on gateway start
+    // 6. Policy management command
+    api.registerCommand?.({
+      name: "sc-policies",
+      description: "List or revoke learned policy rules. Usage: /sc-policies [revoke <rule_id>]",
+      acceptsArgs: true,
+      requireAuth: true,
+      handler: async (ctx: { args?: string }) => {
+        const parts = (ctx.args ?? "").trim().split(/\s+/);
+        const subcommand = parts[0];
+
+        if (subcommand === "revoke") {
+          const ruleId = parts[1];
+          if (!ruleId) {
+            return { text: "Usage: `/sc-policies revoke <rule_id>`" };
+          }
+          try {
+            await client.revokePolicy(ruleId);
+            return { text: `Rule \`${ruleId}\` revoked.` };
+          } catch (err) {
+            return { text: `Failed to revoke: ${err}` };
+          }
+        }
+
+        // Default: list all rules
+        try {
+          const { rules } = await client.listPolicies();
+          if (rules.length === 0) {
+            return { text: "No learned policy rules." };
+          }
+
+          const header = "| ID | Action | Scope | Pattern | Age |\n|---|---|---|---|---|";
+          const rows = rules.map((r) => {
+            const age = formatAge(r.created_at);
+            const pattern = Object.entries(r.match_pattern)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(", ");
+            return `| \`${r.rule_id.slice(0, 8)}\` | ${r.template_name} | ${r.scope} | ${pattern} | ${age} |`;
+          });
+
+          return { text: `**Learned policy rules** (${rules.length})\n\n${header}\n${rows.join("\n")}` };
+        } catch (err) {
+          return { text: `Failed to list policies: ${err}` };
+        }
+      },
+    });
+
+    // 7. Health check on gateway start
     api.on?.("gateway_start", async () => {
       const ok = await client.healthCheck();
       if (!ok) {
@@ -143,7 +189,7 @@ export default {
       }
     });
 
-    // 7. Cleanup on gateway stop
+    // 8. Cleanup on gateway stop
     api.on?.("gateway_stop", async () => {
       try {
         // Try to cleanup session containers — best effort
@@ -154,6 +200,15 @@ export default {
     });
   },
 };
+
+function formatAge(isoDate: string): string {
+  const ms = Date.now() - new Date(isoDate).getTime();
+  const mins = Math.floor(ms / 60_000);
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+}
 
 // Re-export types for consumers
 export type { SafeClawConfig } from "./meta-tool.js";

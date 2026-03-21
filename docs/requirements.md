@@ -18,7 +18,7 @@
 | FR-005 | Apply trust profile overrides to approval tiers                                                   | `catalog.ts`          | `conservative`, `standard`, `power-user`                            |
 | FR-006 | Exclude `always-deny` actions from the tool's action enum                                         | `catalog.ts`          | LLM cannot call excluded actions (`gateway`)                        |
 | FR-007 | Generate meta-tool description from catalog parameter schemas                                     | `catalog.ts`          | Per-action parameter documentation in tool description              |
-| FR-008 | Map OpenClaw session keys to stable SHA-256 hashes                                                | `session-map.ts`      | `safeclaw:` prefix, cached for process lifetime                     |
+| FR-008 | Derive session identity from channel-independent agent ID (not channel-specific session key)       | `session-map.ts`      | `safeclaw:` prefix + `agentId`, SHA-256, cached for process lifetime |
 | FR-009 | Auto-approve path: blocking HTTP call with abort signal passthrough                               | `meta-tool.ts`        | Single round-trip for auto-approve tier actions                     |
 | FR-010 | Human-confirm path: background promise with 500ms race check                                      | `meta-tool.ts`        | Catches server-side auto-approvals (learned policy)                 |
 | FR-011 | Store pending proposals in memory keyed by UUID                                                   | `pending-store.ts`    | Links agent-side proposalId to engine-side approvalId               |
@@ -36,6 +36,10 @@
 | FR-023 | Session cleanup on `gateway_stop` event                                                           | `index.ts`            | Best-effort `DELETE /api/sessions/all`                              |
 | FR-024 | Format execution results for LLM consumption                                                      | `meta-tool.ts`        | Status-specific formatting: completed, failed, denied, rate_limited |
 | FR-025 | Register HTTP route for approval webhook                                                          | `index.ts`            | `POST /safeclaw/approval-notify` with plugin auth                   |
+| FR-026 | `/sc-policies` lists all active learned rules (action, scope, match pattern, age)                 | `index.ts`            | Calls `GET /api/policies`; formats as readable table                |
+| FR-027 | `/sc-policies revoke <rule_id>` deletes a rule, restoring default approval behavior               | `index.ts`            | Calls `DELETE /api/policies/{id}`                                   |
+| FR-028 | Learned rules persist across conversations (belong to user, not conversation)                     | Engine contract       | Rules stored server-side; survive plugin/agent restarts             |
+| FR-029 | Learned rules apply across all channels (Telegram, Discord, TUI, etc.)                            | `session-map.ts`      | Session hash derived from `agentId` (channel-independent)           |
 
 
 ## 2. Non-Functional Requirements
@@ -52,7 +56,7 @@
 | NFR-007 | Pending store bounded by GC        | 10-minute TTL                          | No max entry count — time-based GC only (see [SA-003](risk-assessment.md))      |
 | NFR-008 | Build output                       | `dist/` directory, CommonJS-compatible | `tsc` produces `.js` + `.d.ts`                                                  |
 | NFR-009 | Package distributable via npm      | `npm pack` / `npm publish`             | `files: [dist/, catalog/, docker/, bin/]`                                       |
-| NFR-010 | Test suite passes                  | 52+ tests (vitest)                     | See `test/` directory for full breakdown                                        |
+| NFR-010 | Test suite passes                  | 138+ tests (vitest)                    | See `tests/` directory (unit + integration)                                     |
 
 
 ## 3. Host Filesystem Access (Future)
@@ -76,7 +80,7 @@ Requirements for the planned workspace mount feature. **Not implemented — not 
 
 - **Plugin API:** `register(api)` — uses `registerTool`, `registerHttpRoute`, `registerGatewayMethod`, `registerCommand`, `on` (events)
 - **Workspace:** `api.config?.agent?.workspace` or `process.cwd()`
-- **Session key:** `args._sessionKey` (opaque string, may be undefined)
+- **Session identity:** Derived from `args._agentId` (channel-independent, stable per user). Falls back to `args._sessionKey` if `_agentId` unavailable. Ensures learned policies apply across all channels (Telegram, Discord, TUI, etc.).
 
 ### Execution Engine API
 
@@ -87,8 +91,8 @@ Any HTTP service implementing these endpoints is compatible:
 | ---------------------------------- | -------- | --------------------------------------------- |
 | `POST /api/proposals`              | Yes      | Core execution path — must block until result |
 | `POST /api/approvals/{id}/resolve` | Yes      | Required for human-confirm flow               |
-| `GET /api/policies`                | Optional | Learned policy management                     |
-| `DELETE /api/policies/{id}`        | Optional | Learned policy revocation                     |
+| `GET /api/policies`                | Yes      | Learned policy management (FR-026)            |
+| `DELETE /api/policies/{id}`        | Yes      | Learned policy revocation (FR-027)            |
 | `DELETE /api/sessions/{hash}`      | Optional | Session cleanup                               |
 | `GET /api/health`                  | Optional | Health check on startup                       |
 

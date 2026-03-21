@@ -95,6 +95,47 @@ describe("execute() session_hash", () => {
 
     expect(spy.mock.calls[0][0].session_hash).toBe(sessionHash("default"));
   });
+
+  it("prefers _agentId over _sessionKey for session_hash", async () => {
+    const spy = vi.spyOn(client, "submitProposal").mockResolvedValue({
+      status: "completed",
+      result: { output: "ok", output_vars: {} },
+    });
+
+    const catalog = new Catalog(AUTO_CATALOG);
+    const tool = createSafeClawTool(client, catalog, DEFAULT_CONFIG, "/ws");
+
+    await tool.execute("c1", {
+      action: "exec",
+      params: { command: "ls" },
+      _agentId: "agent-global-id",
+      _sessionKey: "telegram-session-123",
+    } as any);
+
+    expect(spy.mock.calls[0][0].session_hash).toBe(
+      sessionHash("agent-global-id"),
+    );
+  });
+
+  it("falls back to _sessionKey when _agentId is absent", async () => {
+    const spy = vi.spyOn(client, "submitProposal").mockResolvedValue({
+      status: "completed",
+      result: { output: "ok", output_vars: {} },
+    });
+
+    const catalog = new Catalog(AUTO_CATALOG);
+    const tool = createSafeClawTool(client, catalog, DEFAULT_CONFIG, "/ws");
+
+    await tool.execute("c1", {
+      action: "exec",
+      params: { command: "ls" },
+      _sessionKey: "telegram-session-123",
+    } as any);
+
+    expect(spy.mock.calls[0][0].session_hash).toBe(
+      sessionHash("telegram-session-123"),
+    );
+  });
 });
 
 // --- workspace_path propagation ---
