@@ -24,10 +24,36 @@ const GLOBAL_KEY = "__safeclaw_pendingProposals__";
 export const pendingProposals: Map<string, PendingEntry> =
   (globalThis as any)[GLOBAL_KEY] ??= new Map<string, PendingEntry>();
 
+/** Maximum number of pending entries before oldest-eviction kicks in. */
+export const MAX_PENDING = 100;
+
 /** Garbage-collect entries older than 10 minutes. */
 export function gcPending(): void {
   const cutoff = Date.now() - 600_000;
   for (const [id, entry] of pendingProposals) {
     if (entry.createdAt < cutoff) pendingProposals.delete(id);
   }
+}
+
+/**
+ * Add a pending entry with bounded-size enforcement.
+ *
+ * 1. Runs GC to reclaim expired entries.
+ * 2. If still at capacity, evicts the oldest entry (lowest createdAt).
+ * 3. Inserts the new entry.
+ */
+export function addPending(id: string, entry: PendingEntry): void {
+  gcPending();
+  if (pendingProposals.size >= MAX_PENDING) {
+    let oldestId: string | undefined;
+    let oldestTime = Infinity;
+    for (const [k, v] of pendingProposals) {
+      if (v.createdAt < oldestTime) {
+        oldestTime = v.createdAt;
+        oldestId = k;
+      }
+    }
+    if (oldestId !== undefined) pendingProposals.delete(oldestId);
+  }
+  pendingProposals.set(id, entry);
 }

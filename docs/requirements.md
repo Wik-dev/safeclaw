@@ -53,7 +53,7 @@
 | NFR-004 | Auto-approve round-trip latency    | < 1s perceived                         | Blocking HTTP call; engine-side execution adds variable time                    |
 | NFR-005 | Human-confirm prompt latency       | < 500ms                                | Background fire + pending store write + return prompt                           |
 | NFR-006 | Plugin load time                   | < 100ms                                | Synchronous catalog file read + trust profile application                       |
-| NFR-007 | Pending store bounded by GC        | 10-minute TTL                          | No max entry count — time-based GC only (see [SA-003](risk-assessment.md))      |
+| NFR-007 | Pending store bounded              | 100-entry cap + 10-minute TTL          | `addPending()` evicts oldest on overflow after GC. See [SA-003](risk-assessment.md) (Fixed). |
 | NFR-008 | Build output                       | `dist/` directory, CommonJS-compatible | `tsc` produces `.js` + `.d.ts`                                                  |
 | NFR-009 | Package distributable via npm      | `npm pack` / `npm publish`             | `files: [dist/, catalog/, docker/, bin/]`                                       |
 | NFR-010 | Test suite passes                  | 138+ tests (vitest)                    | See `tests/` directory (unit + integration)                                     |

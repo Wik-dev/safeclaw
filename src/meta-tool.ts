@@ -9,7 +9,7 @@ import { randomUUID } from "node:crypto";
 import type { KernelClient, ProposalResult } from "./kernel-client.js";
 import type { Catalog } from "./catalog.js";
 import { sessionHash } from "./session-map.js";
-import { pendingProposals, gcPending } from "./pending-store.js";
+import { pendingProposals, addPending } from "./pending-store.js";
 
 export interface SafeClawConfig {
   kernelUrl: string;
@@ -116,8 +116,6 @@ export function createSafeClawTool(
       // Check if this action requires human approval
       const template = catalog.templates[args.action];
       if (template?.approval_tier === "human-confirm") {
-        gcPending();
-
         const proposalId = randomUUID();
         const notifyUrl = `http://${gatewayHost}:${gatewayPort}/safeclaw/approval-notify?proposalId=${proposalId}`;
 
@@ -132,7 +130,7 @@ export function createSafeClawTool(
         promise.catch(() => {}); // Swallow unhandled rejection
 
         // Store BEFORE the race check — webhook may arrive during the 500ms wait
-        pendingProposals.set(proposalId, {
+        addPending(proposalId, {
           promise,
           approvalId: null,
           action: args.action,
