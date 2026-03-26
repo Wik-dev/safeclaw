@@ -181,7 +181,7 @@ describe("execute() gateway config", () => {
       "/ws",
     );
 
-    await tool.execute("c1", { action: "exec", params: { command: "ls" } });
+    await tool.execute("c1", { action: "exec", params: { command: "npm install" } });
 
     expect(spy.mock.calls[0][0].notify_url).toContain(
       "http://172.18.0.1:9999/",
@@ -196,7 +196,7 @@ describe("execute() gateway config", () => {
     const catalog = new Catalog(CONFIRM_CATALOG);
     const tool = createSafeClawTool(client, catalog, DEFAULT_CONFIG, "/ws");
 
-    await tool.execute("c1", { action: "exec", params: { command: "ls" } });
+    await tool.execute("c1", { action: "exec", params: { command: "npm install" } });
 
     expect(spy.mock.calls[0][0].notify_url).toContain(
       "http://localhost:18789/",
@@ -332,7 +332,7 @@ describe("execute() abort signal", () => {
     const controller = new AbortController();
     await tool.execute(
       "c1",
-      { action: "exec", params: { command: "ls" } },
+      { action: "exec", params: { command: "npm install" } },
       controller.signal,
     );
 

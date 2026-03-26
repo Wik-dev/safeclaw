@@ -10,6 +10,7 @@ import type { KernelClient, ProposalResult } from "./kernel-client.js";
 import type { Catalog } from "./catalog.js";
 import { sessionHash } from "./session-map.js";
 import { pendingProposals, addPending } from "./pending-store.js";
+import { STANDARD_SAFE_EXEC } from "./trust-profiles.js";
 
 export interface SafeClawConfig {
   kernelUrl: string;
@@ -45,6 +46,33 @@ export function formatResult(result: ProposalResult): string {
     parts.push(`Output variables: ${JSON.stringify(r.output_vars)}`);
   }
   return parts.join("\n") || "[COMPLETED] (no output)";
+}
+
+/**
+ * Resolve the effective approval tier for an action, accounting for
+ * safe-exec overrides in non-conservative profiles.
+ *
+ * In `standard` and `power-user` profiles, exec commands whose first token
+ * is in STANDARD_SAFE_EXEC are downgraded from `human-confirm` to
+ * `auto-approve` — no approval gate needed for `ls`, `cat`, `grep`, etc.
+ */
+export function effectiveApprovalTier(
+  action: string,
+  params: Record<string, unknown>,
+  catalogTier: string | undefined,
+  trustProfile: string,
+): string | undefined {
+  if (
+    catalogTier === "human-confirm" &&
+    action === "exec" &&
+    trustProfile !== "conservative"
+  ) {
+    const firstToken = String(params.command ?? "").trim().split(/\s+/)[0];
+    if (firstToken && STANDARD_SAFE_EXEC.has(firstToken)) {
+      return "auto-approve";
+    }
+  }
+  return catalogTier;
 }
 
 /**
@@ -115,7 +143,11 @@ export function createSafeClawTool(
 
       // Check if this action requires human approval
       const template = catalog.templates[args.action];
-      if (template?.approval_tier === "human-confirm") {
+      const tier = effectiveApprovalTier(
+        args.action, args.params, template?.approval_tier,
+        config.trustProfile ?? "standard",
+      );
+      if (tier === "human-confirm") {
         const proposalId = randomUUID();
         const notifyUrl = `http://${gatewayHost}:${gatewayPort}/safeclaw/approval-notify?proposalId=${proposalId}`;
 

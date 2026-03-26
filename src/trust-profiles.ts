@@ -48,3 +48,27 @@ export const DENIED_TOOLS = [
   "image",
   "tts",
 ] as const;
+
+/**
+ * Exec command binaries that auto-approve in `standard` and `power-user` profiles.
+ * Matched against the first whitespace-delimited token of the command string.
+ * These are read-only inspection tools with no persistent side effects.
+ * Ignored in `conservative` profile (everything stays human-confirm).
+ */
+export const STANDARD_SAFE_EXEC: ReadonlySet<string> = new Set([
+  // filesystem inspection
+  "ls", "ll", "la", "pwd", "cat", "head", "tail", "wc",
+  "find", "file", "stat", "du", "df", "tree", "less", "more",
+  // text processing (read-only)
+  "grep", "egrep", "fgrep", "rg", "awk", "sed", "sort", "uniq",
+  "diff", "comm", "cut", "tr", "fold", "nl", "od", "xxd",
+  // output / no-ops
+  "echo", "printf", "true", "false",
+  // process / system info
+  "ps", "pgrep", "free", "uptime", "date", "uname",
+  "whoami", "id", "groups", "env", "printenv",
+  // command discovery
+  "which", "whereis", "type",
+  // misc read-only
+  "basename", "dirname", "realpath", "readlink",
+]);
