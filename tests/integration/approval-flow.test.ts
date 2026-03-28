@@ -128,7 +128,7 @@ class WebhookServer {
 // Plugin registration helper
 // ---------------------------------------------------------------------------
 
-function registerPlugin(kernelUrl: string, gatewayPort: number, gatewayHost: string) {
+function registerPlugin(kernelUrl: string, gatewayPort: number, gatewayHost: string, trustProfile = "standard") {
   let metaToolExecute: MetaToolExecute | null = null;
   let checkToolExecute: CheckToolExecute | null = null;
   let scApproveHandler: ScApproveHandler | null = null;
@@ -136,7 +136,7 @@ function registerPlugin(kernelUrl: string, gatewayPort: number, gatewayHost: str
   const mockApi: Record<string, any> = {
     pluginConfig: {
       kernelUrl,
-      trustProfile: "standard",
+      trustProfile,
       gatewayPort,
       gatewayHost,
     },
@@ -435,4 +435,101 @@ describe("Integration: approval flow (live Validance)", () => {
     const afterText = text(afterResult);
     expect(afterText).toContain("Unknown or expired");
   }, 90_000);
+});
+
+// ---------------------------------------------------------------------------
+// Trust profile tests
+// ---------------------------------------------------------------------------
+
+describe("Integration: trust profiles (live Validance)", () => {
+  const client = new KernelClient(KERNEL_URL);
+  const webhook = new WebhookServer();
+  let alive = false;
+
+  beforeAll(async () => {
+    alive = await client.healthCheck();
+    if (!alive) return;
+    await webhook.start(WEBHOOK_PORT + 1);
+  });
+
+  afterEach(async () => {
+    pendingProposals.clear();
+    clearSessionCache();
+  });
+
+  afterAll(async () => {
+    if (!alive) return;
+    await webhook.stop();
+  });
+
+  // -------------------------------------------------------------------------
+  // Conservative: write goes through human-confirm path (approval prompt)
+  // -------------------------------------------------------------------------
+
+  it("conservative: write shows approval prompt instead of auto-executing", async () => {
+    if (!alive) return;
+
+    const { metaTool } = registerPlugin(KERNEL_URL, WEBHOOK_PORT + 1, GATEWAY_HOST, "conservative");
+
+    const result = await metaTool("tc-cons-write", {
+      action: "write",
+      params: { path: "/tmp/conservative-test.txt", content: "conservative profile test" },
+      _sessionKey: `conservative-test-${randomUUID()}`,
+    } as any);
+
+    const output = text(result);
+    // Conservative profile overrides write to human-confirm.
+    // Plugin takes human-confirm path → fires proposal in background → 500ms race.
+    // Kernel execution takes >500ms (container start), so approval prompt is shown.
+    // This is the intended conservative behavior: user sees ALL actions as gated.
+    expect(output).toContain("/sc-approve");
+    expect(output).toContain("write");
+  }, 30_000);
+
+  // -------------------------------------------------------------------------
+  // Conservative: exec still requires approval (same as standard)
+  // -------------------------------------------------------------------------
+
+  it("conservative: exec still requires approval prompt", async () => {
+    if (!alive) return;
+
+    const { metaTool } = registerPlugin(KERNEL_URL, WEBHOOK_PORT + 1, GATEWAY_HOST, "conservative");
+
+    const result = await metaTool("tc-cons-exec", {
+      action: "exec",
+      params: { command: "echo conservative-exec" },
+      _sessionKey: `conservative-test-${randomUUID()}`,
+    } as any);
+
+    const output = text(result);
+    // exec is human-confirm in both plugin and kernel → approval prompt
+    expect(output).toContain("/sc-approve");
+    expect(output).toContain("exec");
+  }, 30_000);
+
+  // -------------------------------------------------------------------------
+  // Power-user: write auto-approves (same as standard, auto-approve path)
+  // -------------------------------------------------------------------------
+
+  it("power-user: write auto-approves directly", async () => {
+    if (!alive) return;
+
+    const { metaTool } = registerPlugin(KERNEL_URL, WEBHOOK_PORT + 1, GATEWAY_HOST, "power-user");
+
+    const result = await metaTool("tc-pu-write", {
+      action: "write",
+      params: { path: "/tmp/power-user-test.txt", content: "power-user profile test" },
+      _sessionKey: `power-user-test-${randomUUID()}`,
+    } as any);
+
+    const output = text(result);
+    // write is auto-approve in both plugin and kernel → direct result
+    expect(output).not.toContain("/sc-approve");
+    expect(
+      output.includes("[COMPLETED]") ||
+      output.includes("[FAILED]") ||
+      output.includes("wrote") ||
+      output.length > 0
+    ).toBe(true);
+  }, 60_000);
 });

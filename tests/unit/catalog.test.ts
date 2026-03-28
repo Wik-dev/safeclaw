@@ -183,6 +183,24 @@ describe("buildDescription", () => {
     expect(desc).not.toContain("## write [requires approval]");
   });
 
+  it("conservative profile marks all actions as [requires approval]", () => {
+    const catalog = new Catalog(makeFixture(), "conservative");
+    const desc = catalog.buildDescription();
+    expect(desc).toContain("## exec [requires approval]");
+    expect(desc).toContain("## write [requires approval]");
+    expect(desc).toContain("## browser [requires approval]");
+    expect(desc).toContain("## web_fetch [requires approval]");
+  });
+
+  it("power-user profile removes [requires approval] from exec and browser", () => {
+    const catalog = new Catalog(makeFixture(), "power-user");
+    const desc = catalog.buildDescription();
+    expect(desc).not.toContain("## exec [requires approval]");
+    expect(desc).not.toContain("## browser [requires approval]");
+    // write was already auto-approve, no tag
+    expect(desc).not.toContain("## write [requires approval]");
+  });
+
   it("includes parameter descriptions with (required) marker", () => {
     const catalog = new Catalog(makeFixture());
     const desc = catalog.buildDescription();
