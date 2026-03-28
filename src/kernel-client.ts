@@ -10,6 +10,10 @@ export interface ProposalRequest {
   session_hash: string;
   workspace_path?: string;
   notify_url?: string;
+  /** Override the kernel catalog's approval tier. Only "auto-approve" is accepted
+   *  (callers may not escalate to always-deny). Use when the caller's trust policy
+   *  permits auto-approval for an action the kernel catalog marks human-confirm. */
+  approval_tier_override?: "auto-approve";
 }
 
 export interface ProposalResult {

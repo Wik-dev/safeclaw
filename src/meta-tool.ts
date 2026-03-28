@@ -197,16 +197,17 @@ export function createSafeClawTool(
         };
       }
 
-      // Auto-approve path — blocks normally with abort signal
-      const notifyUrl = `http://${gatewayHost}:${gatewayPort}/safeclaw/approval-notify`;
-
+      // Auto-approve path — blocks normally with abort signal.
+      // Pass approval_tier_override so the kernel skips its own gate when the
+      // catalog marks the action human-confirm but the caller's trust policy
+      // allows it (e.g. safe exec commands in standard profile).
       const result = await client.submitProposal(
         {
           action: args.action,
           parameters: args.params,
           session_hash: sHash,
           workspace_path: workspacePath,
-          notify_url: notifyUrl,
+          approval_tier_override: "auto-approve",
         },
         signal,
       );
