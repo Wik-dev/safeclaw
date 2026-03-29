@@ -271,8 +271,10 @@ describe("Integration: approval flow (live Validance)", () => {
     if (!alive) return;
 
     // 1. Submit exec — should return approval prompt
+    //    Use python3 (not echo) because echo is in STANDARD_SAFE_EXEC
+    //    and auto-approves in standard profile without hitting the gate.
     const promptResult = await metaTool("tc-allow-once", execArgs("exec", {
-      command: "echo hello-integration",
+      command: "python3 -c 'print(\"hello-integration\")'",
     }));
     const prompt = text(promptResult);
     expect(prompt).toContain("/sc-approve");
@@ -302,8 +304,9 @@ describe("Integration: approval flow (live Validance)", () => {
     if (!alive) return;
 
     // 1. Submit exec — gets approval prompt
+    //    Use python3 (not echo) because echo is in STANDARD_SAFE_EXEC
     const promptResult = await metaTool("tc-learn-allow", execArgs("exec", {
-      command: "echo learn-allow-test",
+      command: "python3 -c 'print(\"learn-allow-test\")'",
     }));
     const proposalId = extractProposalId(text(promptResult));
 
@@ -317,14 +320,14 @@ describe("Integration: approval flow (live Validance)", () => {
 
     // 3. Verify learned policy exists
     const { rules } = await client.listPolicies(sHash);
-    const echoRule = rules.find(
-      (r) => r.template_name === "exec" && r.scope === "allow" && r.match_pattern?.command === "echo *"
+    const pythonRule = rules.find(
+      (r) => r.template_name === "exec" && r.scope === "allow" && r.match_pattern?.command === "python3 *"
     );
-    expect(echoRule).toBeDefined();
+    expect(pythonRule).toBeDefined();
 
     // 4. Submit another matching exec — should auto-approve within 500ms
     const secondResult = await metaTool("tc-learn-allow-2", execArgs("exec", {
-      command: "echo learn-second",
+      command: "python3 -c 'print(\"learn-second\")'",
     }));
     const secondText = text(secondResult);
     // Should NOT return an approval prompt — learned policy should auto-approve
@@ -332,8 +335,8 @@ describe("Integration: approval flow (live Validance)", () => {
     expect(secondText).toContain("learn-second");
 
     // 5. Cleanup: revoke the learned rule
-    if (echoRule) {
-      await client.revokePolicy(echoRule.rule_id);
+    if (pythonRule) {
+      await client.revokePolicy(pythonRule.rule_id);
     }
   }, 90_000);
 
@@ -344,8 +347,9 @@ describe("Integration: approval flow (live Validance)", () => {
   it("human-confirm → deny: returns denied message", async () => {
     if (!alive) return;
 
+    // Use python3 (not echo) because echo is in STANDARD_SAFE_EXEC
     const promptResult = await metaTool("tc-deny", execArgs("exec", {
-      command: "echo deny-me",
+      command: "python3 -c 'print(\"deny-me\")'",
     }));
     const proposalId = extractProposalId(text(promptResult));
 
@@ -412,8 +416,9 @@ describe("Integration: approval flow (live Validance)", () => {
     if (!alive) return;
 
     // 1. Submit exec — gets approval prompt
+    //    Use python3 (not echo) because echo is in STANDARD_SAFE_EXEC
     const promptResult = await metaTool("tc-check", execArgs("exec", {
-      command: "echo check-test",
+      command: "python3 -c 'print(\"check-test\")'",
     }));
     const proposalId = extractProposalId(text(promptResult));
 
