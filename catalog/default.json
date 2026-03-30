@@ -27,7 +27,7 @@
     },
     "write": {
       "description": "Write content to a file in the workspace.",
-      "persistent": false,
+      "persistent": true,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/write_file.py",
       "parameter_schema": {
@@ -47,7 +47,7 @@
     },
     "edit": {
       "description": "Find and replace text in a workspace file.",
-      "persistent": false,
+      "persistent": true,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/edit_file.py",
       "parameter_schema": {
@@ -68,7 +68,7 @@
     },
     "apply_patch": {
       "description": "Apply a multi-file patch using Begin Patch / End Patch format.",
-      "persistent": false,
+      "persistent": true,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/apply_patch.py",
       "parameter_schema": {
@@ -307,7 +307,7 @@
       "approval_tier": "human-confirm",
       "timeout": 30,
       "rate_limit": 20,
-      "secret_refs": ["SMTP_PASSWORD"]
+      "secret_refs": []
     },
     "sessions_send": {
       "description": "Send a message to an active session and optionally wait for a response.",
