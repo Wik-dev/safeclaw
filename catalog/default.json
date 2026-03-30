@@ -373,7 +373,7 @@
     },
     "image": {
       "description": "Analyze images using vision AI. Accepts workspace paths, URLs, or data: URLs.",
-      "persistent": false,
+      "persistent": true,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/image.py",
       "parameter_schema": {
@@ -393,7 +393,7 @@
     },
     "tts": {
       "description": "Convert text to speech audio using a configurable voice.",
-      "persistent": false,
+      "persistent": true,
       "docker_image": "sandbox",
       "command_template": "python /project/scripts/tts.py",
       "parameter_schema": {
