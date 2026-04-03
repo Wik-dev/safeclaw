@@ -138,10 +138,10 @@ describe("execute() session_hash", () => {
   });
 });
 
-// --- workspace_path propagation ---
+// --- mounts propagation ---
 
-describe("execute() workspace_path", () => {
-  it("passes workspace_path to submitProposal", async () => {
+describe("execute() mounts", () => {
+  it("passes mounts array to submitProposal", async () => {
     const spy = vi.spyOn(client, "submitProposal").mockResolvedValue({
       status: "completed",
       result: { output: "ok", output_vars: {} },
@@ -157,7 +157,9 @@ describe("execute() workspace_path", () => {
 
     await tool.execute("c1", { action: "exec", params: { command: "ls" } });
 
-    expect(spy.mock.calls[0][0].workspace_path).toBe("/home/user/project");
+    expect(spy.mock.calls[0][0].mounts).toEqual([
+      { host_path: "/home/user/project", container_path: "/workspace", mode: "rw" },
+    ]);
   });
 });
 

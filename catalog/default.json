@@ -20,10 +20,7 @@
       "timeout": 120,
       "rate_limit": 200,
       "network_policy": null,
-      "volumes": {
-        "/workspace": {"host_path": "${WORKSPACE}", "mode": "rw"},
-        "/home": {"host_path": "${HOME}", "mode": "ro"}
-      }
+      "workspace_access": true
     },
     "write": {
       "description": "Write content to a file in the workspace.",
@@ -41,9 +38,7 @@
       "approval_tier": "auto-approve",
       "timeout": 30,
       "rate_limit": 500,
-      "volumes": {
-        "/workspace": {"host_path": "${WORKSPACE}", "mode": "rw"}
-      }
+      "workspace_access": true
     },
     "edit": {
       "description": "Find and replace text in a workspace file.",
@@ -62,9 +57,7 @@
       "approval_tier": "auto-approve",
       "timeout": 30,
       "rate_limit": 500,
-      "volumes": {
-        "/workspace": {"host_path": "${WORKSPACE}", "mode": "rw"}
-      }
+      "workspace_access": true
     },
     "apply_patch": {
       "description": "Apply a multi-file patch using Begin Patch / End Patch format.",
@@ -81,9 +74,7 @@
       "approval_tier": "auto-approve",
       "timeout": 30,
       "rate_limit": 500,
-      "volumes": {
-        "/workspace": {"host_path": "${WORKSPACE}", "mode": "rw"}
-      }
+      "workspace_access": true
     },
     "browser": {
       "description": "Control a headless Chromium browser with persistent session. Navigate, interact, screenshot, and extract content from web pages.",
@@ -133,9 +124,7 @@
       "approval_tier": "human-confirm",
       "timeout": 3600,
       "rate_limit": 30,
-      "volumes": {
-        "/downloads": {"host_path": "${WORKSPACE}/downloads", "mode": "rw"}
-      },
+      "workspace_access": true,
       "policy_ceilings": ["evaluate", "execute_js", "submit_form"]
     },
     "web_search": {

@@ -303,7 +303,7 @@ SafeClaw communicates with the execution engine via these REST endpoints. The en
   "action": "exec",
   "parameters": { "command": "npm test" },
   "session_hash": "a1b2c3...",
-  "workspace_path": "/home/user/project",
+  "mounts": [{"host_path": "/home/user/project", "container_path": "/workspace", "mode": "rw"}],
   "notify_url": "http://localhost:18789/safeclaw/approval-notify?proposalId=<uuid>"
 }
 ```

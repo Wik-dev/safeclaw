@@ -8,7 +8,7 @@ export interface ProposalRequest {
   action: string;
   parameters: Record<string, unknown>;
   session_hash: string;
-  workspace_path?: string;
+  mounts?: Array<{ host_path: string; container_path: string; mode: "ro" | "rw" }>;
   notify_url?: string;
   /** Override the kernel catalog's approval tier. Only "auto-approve" is accepted
    *  (callers may not escalate to always-deny). Use when the caller's trust policy

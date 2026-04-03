@@ -156,7 +156,7 @@ export function createSafeClawTool(
           action: args.action,
           parameters: args.params,
           session_hash: sHash,
-          workspace_path: workspacePath,
+          mounts: [{ host_path: workspacePath, container_path: "/workspace", mode: "rw" }],
           notify_url: notifyUrl,
         });
         promise.catch(() => {}); // Swallow unhandled rejection
@@ -206,7 +206,7 @@ export function createSafeClawTool(
           action: args.action,
           parameters: args.params,
           session_hash: sHash,
-          workspace_path: workspacePath,
+          mounts: [{ host_path: workspacePath, container_path: "/workspace", mode: "rw" }],
           approval_tier_override: "auto-approve",
         },
         signal,
