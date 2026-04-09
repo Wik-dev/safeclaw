@@ -22,7 +22,6 @@ import { KernelClient } from "../../src/kernel-client.js";
 // ---------------------------------------------------------------------------
 
 const KERNEL_URL = "http://localhost:8001";
-const WEBHOOK_PORT = 19800;
 /** Gateway host as seen from the Validance container (Docker bridge). */
 const GATEWAY_HOST = "172.18.0.1";
 const TEST_SESSION_KEY = `integration-test-${randomUUID()}`;
@@ -58,7 +57,14 @@ class WebhookServer {
   readonly received = new Map<string, string>();
   private waiters = new Map<string, Array<(approvalId: string) => void>>();
 
-  async start(port: number): Promise<void> {
+  /** The OS-assigned port after start(). */
+  get port(): number {
+    const addr = this.server?.address();
+    if (addr && typeof addr === "object") return addr.port;
+    throw new Error("WebhookServer not started");
+  }
+
+  async start(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.server = createServer((req: IncomingMessage, res: ServerResponse) => {
         const chunks: Buffer[] = [];
@@ -87,7 +93,7 @@ class WebhookServer {
         });
       });
       this.server.on("error", reject);
-      this.server.listen(port, () => resolve());
+      this.server.listen(0, () => resolve());  // port 0 = OS-assigned
     });
   }
 
@@ -212,9 +218,9 @@ describe("Integration: approval flow (live Validance)", () => {
     // Clean up any stale containers from previous test runs
     try { await client.cleanupSession(sHash); } catch { /* ok */ }
 
-    await webhook.start(WEBHOOK_PORT);
+    await webhook.start();
 
-    const handlers = registerPlugin(KERNEL_URL, WEBHOOK_PORT, GATEWAY_HOST);
+    const handlers = registerPlugin(KERNEL_URL, webhook.port, GATEWAY_HOST);
     metaTool = handlers.metaTool;
     checkTool = handlers.checkTool;
     scApprove = handlers.scApprove;
@@ -454,7 +460,7 @@ describe("Integration: trust profiles (live Validance)", () => {
   beforeAll(async () => {
     alive = await client.healthCheck();
     if (!alive) return;
-    await webhook.start(WEBHOOK_PORT + 1);
+    await webhook.start();
   });
 
   afterEach(async () => {
@@ -474,7 +480,7 @@ describe("Integration: trust profiles (live Validance)", () => {
   it("conservative: write shows approval prompt instead of auto-executing", async () => {
     if (!alive) return;
 
-    const { metaTool } = registerPlugin(KERNEL_URL, WEBHOOK_PORT + 1, GATEWAY_HOST, "conservative");
+    const { metaTool } = registerPlugin(KERNEL_URL, webhook.port, GATEWAY_HOST, "conservative");
 
     const result = await metaTool("tc-cons-write", {
       action: "write",
@@ -498,7 +504,7 @@ describe("Integration: trust profiles (live Validance)", () => {
   it("conservative: exec still requires approval prompt", async () => {
     if (!alive) return;
 
-    const { metaTool } = registerPlugin(KERNEL_URL, WEBHOOK_PORT + 1, GATEWAY_HOST, "conservative");
+    const { metaTool } = registerPlugin(KERNEL_URL, webhook.port, GATEWAY_HOST, "conservative");
 
     const result = await metaTool("tc-cons-exec", {
       action: "exec",
@@ -519,7 +525,7 @@ describe("Integration: trust profiles (live Validance)", () => {
   it("power-user: write auto-approves directly", async () => {
     if (!alive) return;
 
-    const { metaTool } = registerPlugin(KERNEL_URL, WEBHOOK_PORT + 1, GATEWAY_HOST, "power-user");
+    const { metaTool } = registerPlugin(KERNEL_URL, webhook.port, GATEWAY_HOST, "power-user");
 
     const result = await metaTool("tc-pu-write", {
       action: "write",
