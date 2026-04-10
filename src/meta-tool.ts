@@ -87,46 +87,45 @@ export function createSafeClawTool(
   const description = catalog.buildDescription();
   const actionNames = catalog.actionNames();
 
-  // Build per-action parameter schemas for structured LLM guidance.
-  // Each entry pairs the action enum value with its parameter schema,
-  // giving the LLM JSON Schema validation instead of just text.
-  const actionSchemas = actionNames.map((name) => {
+  // Build a flat parameter schema — no oneOf/anyOf/allOf.
+  // OpenClaw (Anthropic API) rejects top-level oneOf and the normalizer
+  // merges variants incorrectly, causing the LLM to wrap params in
+  // {"input": "<json string>"} instead of passing them flat.
+  // Instead: single object with action enum + merged params properties.
+  const allParamProps: Record<string, unknown> = {};
+  for (const name of actionNames) {
     const t = catalog.templates[name];
     const paramSchema = t.parameter_schema;
     const props =
       paramSchema && typeof paramSchema === "object"
         ? (paramSchema as any).properties ?? {}
         : {};
-    const req: string[] =
-      paramSchema && typeof paramSchema === "object"
-        ? (paramSchema as any).required ?? []
-        : [];
-
-    // Exclude the "action" property from params (it's top-level)
     const { action: _a, ...paramProps } = props;
-    const paramRequired = req.filter((r: string) => r !== "action");
-
-    return {
-      type: "object" as const,
-      properties: {
-        action: { type: "string" as const, const: name },
-        params: {
-          type: "object" as const,
-          properties: paramProps,
-          ...(paramRequired.length > 0
-            ? { required: paramRequired }
-            : {}),
-        },
-      },
-      required: ["action", "params"],
-    };
-  });
+    for (const [key, value] of Object.entries(paramProps)) {
+      if (!(key in allParamProps)) {
+        allParamProps[key] = value;
+      }
+    }
+  }
 
   return {
     name: "safeclaw",
     description,
     parameters: {
-      oneOf: actionSchemas,
+      type: "object" as const,
+      properties: {
+        action: {
+          type: "string" as const,
+          enum: actionNames,
+          description: "The action to perform",
+        },
+        params: {
+          type: "object" as const,
+          properties: allParamProps,
+          description: "Action-specific parameters. See the tool description for each action's required parameters.",
+        },
+      },
+      required: ["action", "params"],
     },
     execute: async (
       _toolCallId: string,
@@ -151,13 +150,19 @@ export function createSafeClawTool(
         const proposalId = randomUUID();
         const notifyUrl = `http://${gatewayHost}:${gatewayPort}/safeclaw/approval-notify?proposalId=${proposalId}`;
 
+        // Extract input_files and session_hash from params — promoted to top-level fields on kernel request.
+        // session_hash override lets callers link proposals to a specific session (e.g. pipeline session).
+        const { input_files, session_hash: sessionOverride, ...cleanParams } = args.params;
+
         // Fire in background — NO abort signal, let it block in Validance
         const promise = client.submitProposal({
           action: args.action,
-          parameters: args.params,
-          session_hash: sHash,
+          parameters: cleanParams,
+          session_hash: typeof sessionOverride === "string" ? sessionOverride : sHash,
           mounts: [{ host_path: workspacePath, container_path: "/workspace", mode: "rw" }],
           notify_url: notifyUrl,
+          ...(input_files ? { input_files: input_files as Record<string, string> } : {}),
+          caller_id: "safeclaw",
         });
         promise.catch(() => {}); // Swallow unhandled rejection
 
@@ -201,13 +206,17 @@ export function createSafeClawTool(
       // Pass approval_tier_override so the kernel skips its own gate when the
       // catalog marks the action human-confirm but the caller's trust policy
       // allows it (e.g. safe exec commands in standard profile).
+      // Extract input_files and session_hash from params — promoted to top-level fields on kernel request
+      const { input_files: autoInputFiles, session_hash: autoSessionOverride, ...autoCleanParams } = args.params;
       const result = await client.submitProposal(
         {
           action: args.action,
-          parameters: args.params,
-          session_hash: sHash,
+          parameters: autoCleanParams,
+          session_hash: typeof autoSessionOverride === "string" ? autoSessionOverride : sHash,
           mounts: [{ host_path: workspacePath, container_path: "/workspace", mode: "rw" }],
           approval_tier_override: "auto-approve",
+          ...(autoInputFiles ? { input_files: autoInputFiles as Record<string, string> } : {}),
+          caller_id: "safeclaw",
         },
         signal,
       );

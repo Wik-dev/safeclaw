@@ -111,6 +111,24 @@ export function deriveMatchPattern(
         ? { session_key: String(params.session_key) }
         : {};
 
+    // Fleet control actions — device-scoped patterns ensure "allow-always"
+    // on underclock for ASIC-007 only auto-approves future underclocks for
+    // that device, not the entire fleet.
+    case "fleet_status_query":
+      return { query_type: String(params.query_type ?? "*") };
+
+    case "fleet_underclock":
+      return { device_id: String(params.device_id ?? "*") };
+
+    case "fleet_schedule_maintenance":
+      return {
+        device_id: String(params.device_id ?? "*"),
+        maintenance_type: String(params.maintenance_type ?? "*"),
+      };
+
+    case "fleet_emergency_shutdown":
+      return { device_id: String(params.device_id ?? "*") };
+
     default:
       return {};
   }

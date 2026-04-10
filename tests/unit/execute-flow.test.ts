@@ -300,6 +300,137 @@ describe("execute() failed", () => {
   });
 });
 
+// --- input_files promotion from params to top-level ---
+
+describe("execute() input_files promotion", () => {
+  it("auto-approve path: extracts input_files and promotes to top-level", async () => {
+    const spy = vi.spyOn(client, "submitProposal").mockResolvedValue({
+      status: "completed",
+      result: { output: "ok", output_vars: {} },
+    });
+
+    const catalog = new Catalog(AUTO_CATALOG);
+    const tool = createSafeClawTool(client, catalog, DEFAULT_CONFIG, "/ws");
+
+    await tool.execute("c1", {
+      action: "exec",
+      params: {
+        command: "ls",
+        input_files: {
+          "fleet_risk_scores.json": "@abc123.score_fleet:risk_scores",
+          "fleet_metadata.json": "@def456.ingest_telemetry:metadata",
+        },
+      },
+    });
+
+    const req = spy.mock.calls[0][0];
+    // input_files should be a top-level field, NOT inside parameters
+    expect(req.input_files).toEqual({
+      "fleet_risk_scores.json": "@abc123.score_fleet:risk_scores",
+      "fleet_metadata.json": "@def456.ingest_telemetry:metadata",
+    });
+    expect(req.parameters).toEqual({ command: "ls" });
+    expect(req.parameters).not.toHaveProperty("input_files");
+  });
+
+  it("auto-approve path: omits input_files from request when not provided", async () => {
+    const spy = vi.spyOn(client, "submitProposal").mockResolvedValue({
+      status: "completed",
+      result: { output: "ok", output_vars: {} },
+    });
+
+    const catalog = new Catalog(AUTO_CATALOG);
+    const tool = createSafeClawTool(client, catalog, DEFAULT_CONFIG, "/ws");
+
+    await tool.execute("c1", {
+      action: "exec",
+      params: { command: "ls" },
+    });
+
+    const req = spy.mock.calls[0][0];
+    expect(req).not.toHaveProperty("input_files");
+    expect(req.parameters).toEqual({ command: "ls" });
+  });
+
+  it("human-confirm path: extracts input_files and promotes to top-level", async () => {
+    const spy = vi.spyOn(client, "submitProposal").mockResolvedValue({
+      status: "completed",
+      result: { output: "approved", output_vars: {} },
+    });
+
+    const catalog = new Catalog(CONFIRM_CATALOG);
+    const tool = createSafeClawTool(client, catalog, DEFAULT_CONFIG, "/ws");
+
+    await tool.execute("c1", {
+      action: "exec",
+      params: {
+        command: "npm install",
+        input_files: {
+          "data.json": "@hash123.task:var",
+        },
+      },
+    });
+
+    const req = spy.mock.calls[0][0];
+    expect(req.input_files).toEqual({ "data.json": "@hash123.task:var" });
+    expect(req.parameters).toEqual({ command: "npm install" });
+    expect(req.parameters).not.toHaveProperty("input_files");
+  });
+
+  it("human-confirm path: omits input_files from request when not provided", async () => {
+    const spy = vi
+      .spyOn(client, "submitProposal")
+      .mockReturnValue(new Promise(() => {}));
+
+    const catalog = new Catalog(CONFIRM_CATALOG);
+    const tool = createSafeClawTool(client, catalog, DEFAULT_CONFIG, "/ws");
+
+    await tool.execute("c1", {
+      action: "exec",
+      params: { command: "npm install" },
+    });
+
+    const req = spy.mock.calls[0][0];
+    expect(req).not.toHaveProperty("input_files");
+    expect(req.parameters).toEqual({ command: "npm install" });
+  });
+});
+
+// --- caller_id attribution ---
+
+describe("execute() caller_id", () => {
+  it("auto-approve path: sends caller_id 'safeclaw'", async () => {
+    const spy = vi.spyOn(client, "submitProposal").mockResolvedValue({
+      status: "completed",
+      result: { output: "ok", output_vars: {} },
+    });
+
+    const catalog = new Catalog(AUTO_CATALOG);
+    const tool = createSafeClawTool(client, catalog, DEFAULT_CONFIG, "/ws");
+
+    await tool.execute("c1", { action: "exec", params: { command: "ls" } });
+
+    expect(spy.mock.calls[0][0].caller_id).toBe("safeclaw");
+  });
+
+  it("human-confirm path: sends caller_id 'safeclaw'", async () => {
+    const spy = vi.spyOn(client, "submitProposal").mockResolvedValue({
+      status: "completed",
+      result: { output: "approved", output_vars: {} },
+    });
+
+    const catalog = new Catalog(CONFIRM_CATALOG);
+    const tool = createSafeClawTool(client, catalog, DEFAULT_CONFIG, "/ws");
+
+    await tool.execute("c1", {
+      action: "exec",
+      params: { command: "npm install" },
+    });
+
+    expect(spy.mock.calls[0][0].caller_id).toBe("safeclaw");
+  });
+});
+
 // --- abort signal on auto-approve path ---
 
 describe("execute() abort signal", () => {

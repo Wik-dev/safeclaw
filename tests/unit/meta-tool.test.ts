@@ -34,23 +34,91 @@ describe("createSafeClawTool shape", () => {
     images: {},
   };
 
-  it("creates a tool named 'safeclaw' with oneOf parameter schema", () => {
+  it("creates a tool named 'safeclaw' with flat parameter schema (no oneOf)", () => {
     const client = new KernelClient("http://localhost:7400");
     const catalog = new Catalog(FIXTURE, "standard");
     const tool = createSafeClawTool(client, catalog, { kernelUrl: "http://localhost:7400" }, "/ws");
 
     expect(tool.name).toBe("safeclaw");
 
-    const schemas = tool.parameters.oneOf as any[];
-    expect(schemas).toBeDefined();
-    expect(schemas.length).toBe(2);
+    // No oneOf — flat object schema
+    expect(tool.parameters.oneOf).toBeUndefined();
+    expect(tool.parameters.type).toBe("object");
+    expect(tool.parameters.required).toEqual(["action", "params"]);
 
-    const actionNames = schemas.map((s: any) => s.properties.action.const).sort();
-    expect(actionNames).toEqual(["exec", "write"]);
+    // action is an enum of all action names
+    const actionProp = (tool.parameters as any).properties.action;
+    expect(actionProp.type).toBe("string");
+    expect(actionProp.enum.sort()).toEqual(["exec", "write"]);
 
-    for (const s of schemas) {
-      expect(s.required).toEqual(["action", "params"]);
-    }
+    // params has merged properties from all actions
+    const paramProps = (tool.parameters as any).properties.params.properties;
+    expect(paramProps).toHaveProperty("command");
+    expect(paramProps).toHaveProperty("path");
+    expect(paramProps).toHaveProperty("content");
+  });
+});
+
+describe("createSafeClawTool fleet input_files schema", () => {
+  const FLEET_FIXTURE: CatalogData = {
+    templates: {
+      fleet_underclock: {
+        approval_tier: "human-confirm",
+        parameter_schema: {
+          type: "object",
+          properties: {
+            device_id: { type: "string" },
+            target_pct: { type: "number" },
+            reason: { type: "string" },
+            input_files: {
+              type: "object",
+              description: "File references for fleet data.",
+              additionalProperties: { type: "string" },
+            },
+          },
+          required: ["device_id", "target_pct", "reason"],
+        },
+      },
+      fleet_status_query: {
+        approval_tier: "auto-approve",
+        parameter_schema: {
+          type: "object",
+          properties: {
+            query_type: { type: "string" },
+            input_files: {
+              type: "object",
+              description: "File references for fleet data.",
+              additionalProperties: { type: "string" },
+            },
+          },
+          required: ["query_type"],
+        },
+      },
+    },
+    images: {},
+  };
+
+  it("includes input_files in merged params schema for fleet templates", () => {
+    const client = new KernelClient("http://localhost:7400");
+    const catalog = new Catalog(FLEET_FIXTURE, "standard");
+    const tool = createSafeClawTool(client, catalog, { kernelUrl: "http://localhost:7400" }, "/ws");
+
+    const paramProps = (tool.parameters as any).properties.params.properties;
+    expect(paramProps).toHaveProperty("input_files");
+    expect(paramProps.input_files.type).toBe("object");
+    // Also has props from both templates
+    expect(paramProps).toHaveProperty("device_id");
+    expect(paramProps).toHaveProperty("query_type");
+  });
+
+  it("params has no required array (all optional in merged schema)", () => {
+    const client = new KernelClient("http://localhost:7400");
+    const catalog = new Catalog(FLEET_FIXTURE, "standard");
+    const tool = createSafeClawTool(client, catalog, { kernelUrl: "http://localhost:7400" }, "/ws");
+
+    // No required on params — different actions need different params
+    const paramsSchema = (tool.parameters as any).properties.params;
+    expect(paramsSchema.required).toBeUndefined();
   });
 });
 

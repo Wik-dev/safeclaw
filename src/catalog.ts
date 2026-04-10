@@ -52,6 +52,8 @@ const TRUST_OVERRIDES: Record<TrustProfile, Record<string, string>> = {
     canvas: "human-confirm",
     nodes: "human-confirm",
     gateway: "always-deny",
+    // Fleet: read-only queries still require confirmation in conservative mode
+    fleet_status_query: "human-confirm",
   },
   standard: {
     // default.json already has standard tiers
@@ -59,6 +61,10 @@ const TRUST_OVERRIDES: Record<TrustProfile, Record<string, string>> = {
   "power-user": {
     exec: "auto-approve",
     browser: "auto-approve",
+    // Fleet: underclocking is the safest corrective action — control script
+    // still validates fleet capacity constraints (MIN_HASHRATE_PCT, MIN_UNDERCLOCK_PCT).
+    // Maintenance and shutdown remain human-confirm even for power users.
+    fleet_underclock: "auto-approve",
   },
 };
 

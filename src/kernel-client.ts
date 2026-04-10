@@ -14,6 +14,11 @@ export interface ProposalRequest {
    *  (callers may not escalate to always-deny). Use when the caller's trust policy
    *  permits auto-approval for an action the kernel catalog marks human-confirm. */
   approval_tier_override?: "auto-approve";
+  /** File references for task inputs. Maps filename to @hash.task:var ref or azure:// URI.
+   *  Promoted from caller params to top-level field on the kernel request. */
+  input_files?: Record<string, string>;
+  /** Caller identifier for audit trail attribution. */
+  caller_id?: string;
 }
 
 export interface ProposalResult {

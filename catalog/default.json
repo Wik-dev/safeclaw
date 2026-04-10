@@ -488,6 +488,92 @@
       "timeout": 120,
       "rate_limit": 30
     },
+    "fleet_status_query": {
+      "description": "Query fleet health status: summary, device detail, tier breakdown, or risk ranking. Read-only.",
+      "persistent": false,
+      "docker_image": "fleet-control",
+      "command_template": "python /app/fleet_status.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "query_type": {"type": "string", "enum": ["summary", "device_detail", "tier_breakdown", "risk_ranking"], "description": "Type of fleet query"},
+          "device_id": {"type": "string", "description": "Device ID (required for device_detail)"},
+          "session_hash": {"type": "string", "description": "Pipeline session hash from fleet_summary.json. Links proposals to the simulation session for unified dashboard tracking."},
+          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Copy these from fleet_summary.json's input_files_refs.", "additionalProperties": {"type": "string"}}
+        },
+        "required": ["query_type"]
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 30,
+      "rate_limit": 200,
+      "workspace_access": true
+    },
+    "fleet_underclock": {
+      "description": "Reduce a device's clock frequency to a target percentage of stock. Validates fleet capacity constraints.",
+      "persistent": false,
+      "docker_image": "fleet-control",
+      "command_template": "python /app/control_action.py --action underclock",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "device_id": {"type": "string", "description": "Target device ID (e.g. ASIC-007)"},
+          "target_pct": {"type": "number", "minimum": 50, "maximum": 100, "description": "Target clock percentage of stock (50-100)"},
+          "reason": {"type": "string", "description": "Rationale for the underclock action"},
+          "session_hash": {"type": "string", "description": "Pipeline session hash from fleet_summary.json. Links proposals to the simulation session for unified dashboard tracking."},
+          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Copy these from fleet_summary.json's input_files_refs.", "additionalProperties": {"type": "string"}}
+        },
+        "required": ["device_id", "target_pct", "reason"]
+      },
+      "approval_tier": "human-confirm",
+      "timeout": 60,
+      "rate_limit": 50,
+      "workspace_access": true
+    },
+    "fleet_schedule_maintenance": {
+      "description": "Schedule a device for maintenance. Validates fleet redundancy and capacity constraints.",
+      "persistent": false,
+      "docker_image": "fleet-control",
+      "command_template": "python /app/control_action.py --action maintenance",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "device_id": {"type": "string", "description": "Target device ID"},
+          "maintenance_type": {"type": "string", "enum": ["inspection", "minor_repair", "major_repair", "firmware_update"], "description": "Type of maintenance"},
+          "urgency": {"type": "string", "enum": ["immediate", "next_window", "scheduled"], "description": "Scheduling urgency"},
+          "reason": {"type": "string", "description": "Rationale for the maintenance request"},
+          "session_hash": {"type": "string", "description": "Pipeline session hash from fleet_summary.json. Links proposals to the simulation session for unified dashboard tracking."},
+          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Copy these from fleet_summary.json's input_files_refs.", "additionalProperties": {"type": "string"}}
+        },
+        "required": ["device_id", "maintenance_type", "urgency", "reason"]
+      },
+      "approval_tier": "human-confirm",
+      "timeout": 60,
+      "rate_limit": 20,
+      "workspace_access": true
+    },
+    "fleet_emergency_shutdown": {
+      "description": "Immediate device shutdown. Policy ceiling: never auto-approves via learned rules.",
+      "persistent": false,
+      "docker_image": "fleet-control",
+      "command_template": "python /app/control_action.py --action shutdown",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "device_id": {"type": "string", "description": "Target device ID"},
+          "reason": {"type": "string", "description": "Rationale for emergency shutdown"},
+          "schedule_inspection": {"type": "boolean", "description": "Also schedule post-shutdown inspection"},
+          "action": {"type": "string", "const": "emergency_shutdown", "description": "Action type for policy ceiling enforcement"},
+          "session_hash": {"type": "string", "description": "Pipeline session hash from fleet_summary.json. Links proposals to the simulation session for unified dashboard tracking."},
+          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Copy these from fleet_summary.json's input_files_refs.", "additionalProperties": {"type": "string"}}
+        },
+        "required": ["device_id", "reason", "action"]
+      },
+      "approval_tier": "human-confirm",
+      "timeout": 60,
+      "rate_limit": 5,
+      "workspace_access": true,
+      "policy_ceilings": ["emergency_shutdown"]
+    },
     "gateway": {
       "approval_tier": "always-deny"
     }
@@ -496,6 +582,7 @@
     "sandbox": "validance-sandbox:latest",
     "comms": "validance-comms:latest",
     "web": "validance-web:latest",
-    "browser": "validance-browser:latest"
+    "browser": "validance-browser:latest",
+    "fleet-control": "fleet-control:latest"
   }
 }
