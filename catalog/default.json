@@ -498,8 +498,8 @@
         "properties": {
           "query_type": {"type": "string", "enum": ["summary", "device_detail", "tier_breakdown", "risk_ranking"], "description": "Type of fleet query"},
           "device_id": {"type": "string", "description": "Device ID (required for device_detail)"},
-          "session_hash": {"type": "string", "description": "Pipeline session hash from fleet_summary.json. Links proposals to the simulation session for unified dashboard tracking."},
-          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Copy these from fleet_summary.json's input_files_refs.", "additionalProperties": {"type": "string"}}
+          "session_hash": {"type": "string", "description": "Pipeline session hash from the orchestrator notification. Links proposals to the simulation session for unified dashboard tracking."},
+          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Provided in the orchestrator cycle notification.", "additionalProperties": {"type": "string"}}
         },
         "required": ["query_type"]
       },
@@ -519,8 +519,8 @@
           "device_id": {"type": "string", "description": "Target device ID (e.g. ASIC-007)"},
           "target_pct": {"type": "number", "minimum": 50, "maximum": 100, "description": "Target clock percentage of stock (50-100)"},
           "reason": {"type": "string", "description": "Rationale for the underclock action"},
-          "session_hash": {"type": "string", "description": "Pipeline session hash from fleet_summary.json. Links proposals to the simulation session for unified dashboard tracking."},
-          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Copy these from fleet_summary.json's input_files_refs.", "additionalProperties": {"type": "string"}}
+          "session_hash": {"type": "string", "description": "Pipeline session hash from the orchestrator notification. Links proposals to the simulation session for unified dashboard tracking."},
+          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Provided in the orchestrator cycle notification.", "additionalProperties": {"type": "string"}}
         },
         "required": ["device_id", "target_pct", "reason"]
       },
@@ -541,8 +541,8 @@
           "maintenance_type": {"type": "string", "enum": ["inspection", "minor_repair", "major_repair", "firmware_update"], "description": "Type of maintenance"},
           "urgency": {"type": "string", "enum": ["immediate", "next_window", "scheduled"], "description": "Scheduling urgency"},
           "reason": {"type": "string", "description": "Rationale for the maintenance request"},
-          "session_hash": {"type": "string", "description": "Pipeline session hash from fleet_summary.json. Links proposals to the simulation session for unified dashboard tracking."},
-          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Copy these from fleet_summary.json's input_files_refs.", "additionalProperties": {"type": "string"}}
+          "session_hash": {"type": "string", "description": "Pipeline session hash from the orchestrator notification. Links proposals to the simulation session for unified dashboard tracking."},
+          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Provided in the orchestrator cycle notification.", "additionalProperties": {"type": "string"}}
         },
         "required": ["device_id", "maintenance_type", "urgency", "reason"]
       },
@@ -563,8 +563,8 @@
           "reason": {"type": "string", "description": "Rationale for emergency shutdown"},
           "schedule_inspection": {"type": "boolean", "description": "Also schedule post-shutdown inspection"},
           "action": {"type": "string", "const": "emergency_shutdown", "description": "Action type for policy ceiling enforcement"},
-          "session_hash": {"type": "string", "description": "Pipeline session hash from fleet_summary.json. Links proposals to the simulation session for unified dashboard tracking."},
-          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Copy these from fleet_summary.json's input_files_refs.", "additionalProperties": {"type": "string"}}
+          "session_hash": {"type": "string", "description": "Pipeline session hash from the orchestrator notification. Links proposals to the simulation session for unified dashboard tracking."},
+          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Provided in the orchestrator cycle notification.", "additionalProperties": {"type": "string"}}
         },
         "required": ["device_id", "reason", "action"]
       },
@@ -573,6 +573,47 @@
       "rate_limit": 5,
       "workspace_access": true,
       "policy_ceilings": ["emergency_shutdown"]
+    },
+    "fleet_pipeline_status": {
+      "description": "Query the Validance API for the latest mdk.score pipeline run. Returns session_hash, input_files refs, and cycle info. Read-only, no workspace needed.",
+      "persistent": false,
+      "docker_image": "fleet-control",
+      "command_template": "python /app/pipeline_status.py",
+      "environment": { "VALIDANCE_API_URL": "http://172.17.0.1:8000" },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "session_hash": {"type": "string", "description": "Optional: filter to a specific simulation session"}
+        }
+      },
+      "approval_tier": "auto-approve",
+      "timeout": 15,
+      "rate_limit": 200
+    },
+    "knowledge_query": {
+      "description": "Query organizational knowledge base using RAG (retrieval-augmented generation). Read-only.",
+      "persistent": false,
+      "docker_image": "rag-tasks",
+      "command_template": "python /app/scripts/knowledge_query.py",
+      "environment": {
+        "TOP_K": "5",
+        "LLM_MODEL": "gpt-4.1-mini",
+        "EMBEDDING_MODEL": "text-embedding-3-small"
+      },
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "Natural language question to answer from the knowledge base"},
+          "session_hash": {"type": "string", "description": "Pipeline session hash. Links proposals to the simulation session for unified dashboard tracking."},
+          "input_files": {"type": "object", "description": "File references for knowledge index. Maps filename to @hash.task:var reference. Must include index.json pointing to the ingested knowledge base.", "additionalProperties": {"type": "string"}}
+        },
+        "required": ["query"]
+      },
+      "approval_tier": "auto-approve",
+      "secret_refs": ["OPENAI_API_KEY"],
+      "timeout": 60,
+      "rate_limit": 100,
+      "network_policy": {"egress_allow": ["api.openai.com:443"]}
     },
     "gateway": {
       "approval_tier": "always-deny"
@@ -583,6 +624,7 @@
     "comms": "validance-comms:latest",
     "web": "validance-web:latest",
     "browser": "validance-browser:latest",
-    "fleet-control": "fleet-control:latest"
+    "fleet-control": "fleet-control:latest",
+    "rag-tasks": "rag-tasks:latest"
   }
 }
