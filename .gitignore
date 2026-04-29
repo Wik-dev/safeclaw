@@ -6,3 +6,9 @@ dist/
 !bin/safeclaw.mjs
 .env
 .env.*
+
+# Internal Claude Code guidance — never publish
+CLAUDE.md
+
+# Internal feature plans / scratchpads
+docs/F-001-plan.md
