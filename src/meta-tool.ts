@@ -150,14 +150,14 @@ export function createSafeClawTool(
         const proposalId = randomUUID();
         const notifyUrl = `http://${gatewayHost}:${gatewayPort}/safeclaw/approval-notify?proposalId=${proposalId}`;
 
-        // Extract input_files and session_hash from params — promoted to top-level fields on kernel request.
-        // session_hash override lets callers link proposals to a specific session (e.g. pipeline session).
-        const { input_files, session_hash: sessionOverride, ...cleanParams } = args.params;
+        // session_hash and input_files are promoted to top-level fields on the kernel request
+        // BUT also kept in parameters — the task script reads them from VALIDANCE_PARAMS.
+        const { input_files, session_hash: sessionOverride } = args.params;
 
         // Fire in background — NO abort signal, let it block in Validance
         const promise = client.submitProposal({
           action: args.action,
-          parameters: cleanParams,
+          parameters: args.params,
           session_hash: typeof sessionOverride === "string" ? sessionOverride : sHash,
           mounts: [{ host_path: workspacePath, container_path: "/workspace", mode: "rw" }],
           notify_url: notifyUrl,
@@ -206,12 +206,12 @@ export function createSafeClawTool(
       // Pass approval_tier_override so the kernel skips its own gate when the
       // catalog marks the action human-confirm but the caller's trust policy
       // allows it (e.g. safe exec commands in standard profile).
-      // Extract input_files and session_hash from params — promoted to top-level fields on kernel request
-      const { input_files: autoInputFiles, session_hash: autoSessionOverride, ...autoCleanParams } = args.params;
+      // session_hash and input_files promoted to top-level but kept in parameters (task reads VALIDANCE_PARAMS)
+      const { input_files: autoInputFiles, session_hash: autoSessionOverride } = args.params;
       const result = await client.submitProposal(
         {
           action: args.action,
-          parameters: autoCleanParams,
+          parameters: args.params,
           session_hash: typeof autoSessionOverride === "string" ? autoSessionOverride : sHash,
           mounts: [{ host_path: workspacePath, container_path: "/workspace", mode: "rw" }],
           approval_tier_override: "auto-approve",
