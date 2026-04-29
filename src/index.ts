@@ -31,7 +31,7 @@ export default {
     const client = new KernelClient(kernelUrl);
     const catalog = Catalog.load(trustProfile);
     const workspacePath: string =
-      api.config?.agent?.workspace ?? process.cwd();
+      api.config?.agents?.defaults?.workspace ?? process.cwd();
 
     // 1. Meta-tool — the single tool the LLM calls
     api.registerTool(createSafeClawTool(client, catalog, config, workspacePath));
