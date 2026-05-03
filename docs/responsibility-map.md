@@ -85,8 +85,8 @@ SafeClaw integrates as an OpenClaw **plugin** ([plugin docs](https://docs.opencl
 | Responsibility | Details |
 |---|---|
 | Template Catalog | Loading `catalog.json`, validating proposals against parameter schemas |
-| Approval Gate | Creating `approval record` records, polling for resolution, timeout (300s) → deny |
-| Learned Policy | Persisting rules from "approve + remember" to PostgreSQL (`learned-policy rule`), matching future proposals, TTL/expiry |
+| Approval Gate | Creating approval records, polling for resolution, timeout (300s) → deny |
+| Learned Policy | Persisting rules from "approve + remember" to PostgreSQL, matching future proposals, TTL/expiry |
 | Policy Ceilings | Actions/sub-types that bypass learned rules — always require approval gate regardless of prior allow rules |
 | Secret Store | Resolving `secret_refs` via backends (currently `EnvironmentBackend`), injecting as container env vars. Fail-closed: unresolved secret → proposal rejected before container starts |
 | Container execution | Docker image management, container spawn, command execution, stdout/stderr capture, resource tracking |
@@ -99,7 +99,7 @@ SafeClaw integrates as an OpenClaw **plugin** ([plugin docs](https://docs.opencl
 | Network policy | Per-template egress allow/deny (defined in catalog schema, **not yet enforced**) |
 | Webhook notification | POST to `notify_url` when approval is needed (caller provides URL in proposal) |
 | Container cleanup | Persistent worker reaper (idle timeout), session cleanup on `DELETE /api/sessions/{hash}` |
-| Database | PostgreSQL — `workflow execution record`, `task execution record`, `AuditEvent`, `approval record`, `learned-policy rule` |
+| Database | PostgreSQL — workflow/task execution records, audit events, approval records, learned-policy rules |
 
 **API endpoints:**
 

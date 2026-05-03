@@ -44,7 +44,7 @@ export function getQueryParam(url: string | undefined, key: string): string | nu
 /**
  * Create the webhook HTTP handler for approval notifications.
  *
- * When Validance creates a approval record, it POSTs to the notify_url
+ * When Validance creates an approval record, it POSTs to the notify_url
  * which includes ?proposalId=<uuid>. This handler links the Validance
  * approval_id to the agent-side proposalId in the pending store.
  */

@@ -60,11 +60,7 @@ safeclaw/
 │   └── safeclaw.mjs          # CLI: npx @validance/safeclaw start|stop|logs
 ├── tests/
 │   ├── unit/                  # Vitest unit tests (no HTTP)
-│   ├── integration/           # Plugin → live Validance API tests
-│   ├── test_api_e2e.py        # Python API E2E tests (25 tests)
-│   ├── test-procedure.md      # Repeatable test plan
-│   ├── test-log.md            # Test execution records
-│   └── E2E_TEST_RESULTS.md    # API E2E test results
+│   └── integration/           # Plugin → live Validance API tests
 ├── docs/
 │   ├── architecture.md       # This document
 │   ├── validance-integration.md  # Engine-specific integration details
@@ -168,7 +164,7 @@ Agent calls safeclaw({action: "exec", params: {command: "ls /tmp"}})
         /sc-approve <proposalId> allow-once"
 
 Engine (background):
-  → creates approval record
+  → creates an approval record
   → fires webhook to /safeclaw/approval-notify?proposalId=<uuid>
   → webhook handler links approval_id ↔ proposalId in pending store
 
@@ -332,7 +328,7 @@ SafeClaw communicates with the execution engine via these REST endpoints. The en
 - **Approval gates** — human-confirm actions cannot execute without explicit user decision via `/sc-approve` or learned policy match.
 - **Rate limiting** — per-session, per-action rate limits enforced by the execution engine. Prevents runaway tool loops.
 - **Learned policies** — `allow-always`/`deny-always` create rules that persist to the database across sessions, reducing approval fatigue without removing control.
-- **Non-root containers** — task containers run as `worker` (uid 1000) via the Dockerfile `USER` directive. The engine respects this when `(proposal-pipeline mode)` (proposal-pipeline mode). `/etc/shadow` and other root-owned files are inaccessible inside containers.
+- **Non-root containers** — task containers run as `worker` (uid 1000) via the Dockerfile `USER` directive. The engine's proposal-pipeline mode respects this (no host bind-mounts overriding the user). `/etc/shadow` and other root-owned files are inaccessible inside containers.
 - **Secret isolation** — secrets (API keys, credentials) are injected by the engine at execution time. They never pass through the plugin or the LLM.
 - **Action exclusion** — always-deny actions are removed from the tool enum. The LLM cannot call them.
 - **Deterministic approval** — `/sc-approve` is a plugin command, not a tool. The LLM cannot invoke it or influence the approval decision.
