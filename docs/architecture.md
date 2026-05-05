@@ -92,7 +92,7 @@ A second tool, `safeclaw_check`, is registered for polling the result of pending
 
 ### 3.2 Tool Catalog
 
-The catalog (`catalog/default.json`) defines 16 templates across 4 Docker images and 3 approval tiers.
+The catalog (`catalog/default.json`) defines the OpenClaw-native tool replacements — 16 templates across 4 Docker images and 3 approval tiers. Deployment-specific tools (vertical extensions, operational endpoints) belong in an optional overlay file loaded from deployment config; they are not part of the published artifact. See [ADR-002 — Catalog overlay separation](ADR-002-catalog-overlay-separation.md) for the overlay loading contract and per-entry tier-override format.
 
 | Action | Image | Approval Tier | Timeout | Rate Limit | Persistent | Notes |
 |--------|-------|---------------|---------|------------|------------|-------|
