@@ -1,6 +1,6 @@
 # ADR-002: Separate the public default catalog from deployment-specific overlays
 
-- **Status:** Proposed (more urgent than ADR-001 — affects every npm consumer today)
+- **Status:** Accepted (2026-05-05) — implementation next. Validance-side instance split deliberately deferred: the kernel's existing controls (approval gate, rate limits, network policy, container isolation, audit chain) are the load-bearing defense for the hosted endpoint. Catalog content is a discoverability concern, not a security boundary, so the SafeClaw npm side is sufficient until binary distribution lands.
 - **Date:** 2026-05-05
 - **Supersedes:** none
 - **Related:** `docs/architecture.md` § 3.2, `docs/ADR-001-safeclaw-future-tool-split.md`, `catalog/default.json`, `src/catalog.ts`
