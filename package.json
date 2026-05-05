@@ -40,7 +40,14 @@
   },
   "openclaw": {
     "extensions": [
+      "./src/index.ts"
+    ],
+    "runtimeExtensions": [
       "./dist/index.js"
-    ]
+    ],
+    "compat": {
+      "pluginApi": ">=2026.4.15",
+      "minGatewayVersion": "2026.4.15"
+    }
   }
 }
