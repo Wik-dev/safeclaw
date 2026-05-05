@@ -18,11 +18,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'              # 24 ships npm 11.x natively (OIDC-ready); 22 ships npm 10.x
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Upgrade npm to a version that supports OIDC trusted publishing
-        run: npm install -g npm@latest      # ubuntu-latest ships npm 10.x; OIDC needs 11.5+
 
       - name: Verify tag matches package.json version
         run: |
