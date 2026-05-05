@@ -12,7 +12,7 @@
 | ID     | Requirement                                                                                       | Component             | Notes                                                               |
 | ------ | ------------------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------- |
 | FR-001 | Deny built-in dangerous tools via OpenClaw `tools.deny` config and register replacement meta-tool | `index.ts`            | 16 tools denied; see `DENIED_TOOLS` in `trust-profiles.ts`          |
-| FR-002 | Register a single `safeclaw` meta-tool accepting `{action, params}`                               | `meta-tool.ts`        | LLM calls one tool; action enum is catalog-driven                   |
+| FR-002 | Register a single `safeclaw` meta-tool accepting `{action, params}` — planned migration to per-action tools (see [ADR-001](ADR-001-safeclaw-future-tool-split.md)) | `meta-tool.ts`        | LLM calls one tool; action enum is catalog-driven                   |
 | FR-003 | Register a `safeclaw_check` tool for polling pending action results                               | `approval-handler.ts` | Agent calls after approval to retrieve output                       |
 | FR-004 | Load tool catalog from `catalog/default.json` at plugin registration                              | `catalog.ts`          | 16 templates, 4 Docker images                                       |
 | FR-005 | Apply trust profile overrides to approval tiers                                                   | `catalog.ts`          | `conservative`, `standard`, `power-user`                            |

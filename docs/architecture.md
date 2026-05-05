@@ -86,6 +86,8 @@ Why one tool instead of 16:
 - **Catalog-driven** — adding a new action requires only a catalog entry, not a new tool registration
 - **Smaller tool surface** — the LLM sees one tool with an `action` enum, not 16 separate tool definitions
 
+> **Future optimization (deferred):** the "smaller tool surface" rationale is weaker than it appears. A flat `params` object whose validity depends on the `action` value gives the LLM less typed structure than 16 well-typed individual tools would. OpenClaw's bundled plugins (e.g. `memory-wiki`) follow the one-tool-per-action convention. A future refactor would split the meta-tool into N individual tools sharing the same proposal backend — preserving the single decision point and catalog-driven extensibility while aligning with OpenClaw conventions and improving LLM call reliability. Trigger conditions, target architecture, and migration plan are captured in [ADR-001 — SafeClaw future tool split](ADR-001-safeclaw-future-tool-split.md).
+
 A second tool, `safeclaw_check`, is registered for polling the result of pending (human-confirm) actions.
 
 ### 3.2 Tool Catalog
