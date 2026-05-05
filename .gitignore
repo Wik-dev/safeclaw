@@ -15,3 +15,6 @@ docs/F-001-plan.md
 
 # Internal dev docs — kept on disk for reference, never published
 notes/
+
+# Wire-contract spec — kept untracked while the pre-GA contract may still evolve
+docs/validance-integration.md
