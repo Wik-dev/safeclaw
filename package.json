@@ -1,6 +1,6 @@
 {
   "name": "@validance/safeclaw",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Containerized execution for OpenClaw via Validance kernel",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
