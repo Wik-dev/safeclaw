@@ -1,51 +1,27 @@
 # SafeClaw
 
-[OpenClaw](https://openclaw.ai/) plugin that lets you run OpenClaw on your everyday machine. Tool execution is routed to a [Validance](https://validance.io/) instance — local or remote — gated by human approval, learned policies, governance, and a data-integrity layer.
+[OpenClaw](https://openclaw.ai/) plugin that makes it safe to run OpenClaw on your everyday machine. Tool execution is routed to a [Validance](https://docs.validance.io/) instance (or any server that implements the contract) — gated by human approval, learned policies, and governance; recorded in a tamper-evident audit chain.
 
 ## Why this exists
 
-OpenClaw's tool capabilities are extensive enough that operators occasionally provision a dedicated machine to host it. SafeClaw routes that execution off-host into an isolated environment, keeping OpenClaw on the operator's everyday machine without giving up tool capability.
+SafeClaw adds safety, governance, and audit to an OpenClaw deployment: every action that would otherwise execute with OpenClaw's privileges is gated by human approval and learned policy, runs in an isolated container, and is recorded in a tamper-evident audit chain.
 
 With SafeClaw enabled in OpenClaw:
 
-- Native tools (`exec`, `write`, `edit`, `browser`, `web_fetch`, `message`, …) are denied at the OpenClaw layer.
-- One meta-tool (`safeclaw`) is registered. Every action that would have run locally goes through it.
-- Action proposals are sent over HTTP to a Validance instance, which validates the request, applies learned policy, gates on human approval where required, executes in an isolated container, and records the run.
+- Native tools are denied via the OpenClaw config (see Quick start, step 2).
+- SafeClaw re-exposes those capabilities as tools that route through Validance.
 - Human-confirm actions surface in OpenClaw as inline `/sc-approve <id>` prompts.
 - Trust profiles tune which actions auto-approve and which require confirmation.
 - Gateway webhooks carry approval notifications from Validance back into OpenClaw.
 
-The host machine never runs the LLM-supplied command. Approvals, policy, and execution all live on the Validance side.
-
 ## How it works
 
-```
-              YOUR MACHINE                              VALIDANCE INSTANCE
-              ─────────────                             ──────────────────
-
-  LLM agent
-    │  calls safeclaw({ action, params })
-    ▼
-  @validance/safeclaw plugin
-    │  native tools denied locally:
-    │    exec, bash, write, edit, browser,
-    │    web_fetch, message, ...
-    │
-    │  POST /api/proposals   ──HTTP(S)──▶  validate → apply policy
-    │                                      gate human approval
-    │  /sc-approve <id>      ◀──webhook──  pending approval (if needed)
-    │  /sc-approve <id>      ──HTTP(S)──▶  resolve, execute in container
-    │                        ◀──HTTP(S)──  result / [DENIED] / [RATE LIMITED]
-    ▼
-  OpenClaw shows the result
-```
-
-The LLM calls one tool (`safeclaw`) with an `action` parameter. The plugin denies OpenClaw's native execution tools, translates the call into a JSON proposal, and sends it to the configured Validance instance. The instance validates, applies policy, gates on approval where required, executes in isolation, and returns a structured result.
+![SafeClaw request flow between the host machine and a Validance instance](docs/safeclaw_request_flow.svg)
 
 ## What you need
 
 - An [OpenClaw](https://openclaw.ai/) installation.
-- A [Validance](https://validance.io/) instance — local or remote. The default `kernelUrl` (`https://api.validance.io`) is Validance's hosted evaluation endpoint, open for pre-GA use without authentication. For local installation or production access, see [Validance — Getting started](https://docs.validance.io/getting-started/).
+- A [Validance](https://docs.validance.io/) instance — local or remote. The default `kernelUrl` (`https://api.validance.io`) is Validance's hosted evaluation endpoint, open for pre-GA use without authentication. For local installation or production access, see [Validance — Getting started](https://docs.validance.io/getting-started/).
 
 ## Quick start
 
@@ -132,14 +108,6 @@ npm run lint       # type-check (tsc --noEmit)
 ```
 
 Requires Node.js 18+ (native fetch). Zero external runtime dependencies.
-
-## Roadmap
-
-- **Now.** Manual install in OpenClaw. The default points at Validance's hosted evaluation endpoint; local or production Validance instances are documented at [docs.validance.io/getting-started](https://docs.validance.io/getting-started/).
-- **Next.** `npx @validance/safeclaw start` — one command for the same install and config flow.
-- **Later.** Bundled local mode — the same plugin will start a local Validance instance via Docker Compose. Gated on Validance's binary distribution.
-
-The plugin contract, config keys, and approval flow stay stable across all three.
 
 ## License
 
