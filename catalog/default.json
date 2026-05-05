@@ -8,13 +8,30 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "command": {"type": "string", "description": "Shell command to execute"},
-          "cwd": {"type": "string", "description": "Working directory (relative to /workspace)"},
-          "env": {"type": "object", "description": "Environment variables to set"},
-          "timeout": {"type": "number", "description": "Timeout in seconds"},
-          "background": {"type": "boolean", "description": "Run in background, return session ID immediately"}
+          "command": {
+            "type": "string",
+            "description": "Shell command to execute"
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Working directory (relative to /workspace)"
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables to set"
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Timeout in seconds"
+          },
+          "background": {
+            "type": "boolean",
+            "description": "Run in background, return session ID immediately"
+          }
         },
-        "required": ["command"]
+        "required": [
+          "command"
+        ]
       },
       "approval_tier": "human-confirm",
       "timeout": 120,
@@ -30,10 +47,19 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "path": {"type": "string", "description": "File path relative to workspace"},
-          "content": {"type": "string", "description": "File content to write"}
+          "path": {
+            "type": "string",
+            "description": "File path relative to workspace"
+          },
+          "content": {
+            "type": "string",
+            "description": "File content to write"
+          }
         },
-        "required": ["path", "content"]
+        "required": [
+          "path",
+          "content"
+        ]
       },
       "approval_tier": "auto-approve",
       "timeout": 30,
@@ -48,11 +74,24 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "path": {"type": "string", "description": "File path relative to workspace"},
-          "old_string": {"type": "string", "description": "Text to find"},
-          "new_string": {"type": "string", "description": "Text to replace with"}
+          "path": {
+            "type": "string",
+            "description": "File path relative to workspace"
+          },
+          "old_string": {
+            "type": "string",
+            "description": "Text to find"
+          },
+          "new_string": {
+            "type": "string",
+            "description": "Text to replace with"
+          }
         },
-        "required": ["path", "old_string", "new_string"]
+        "required": [
+          "path",
+          "old_string",
+          "new_string"
+        ]
       },
       "approval_tier": "auto-approve",
       "timeout": 30,
@@ -67,9 +106,14 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "input": {"type": "string", "description": "Patch content using *** Begin Patch / *** End Patch format"}
+          "input": {
+            "type": "string",
+            "description": "Patch content using *** Begin Patch / *** End Patch format"
+          }
         },
-        "required": ["input"]
+        "required": [
+          "input"
+        ]
       },
       "approval_tier": "auto-approve",
       "timeout": 30,
@@ -90,42 +134,173 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "action": {"type": "string", "enum": ["snapshot", "navigate", "click", "type", "hover", "press", "select", "scroll", "screenshot", "evaluate", "console", "wait", "tabs", "open", "close", "focus", "pdf", "dialog", "upload", "submit_form", "read_text"]},
-          "url": {"type": "string", "description": "URL for navigate/open"},
-          "ref": {"type": "string", "description": "Element ref from snapshot (e.g. e1, e2)"},
-          "selector": {"type": "string", "description": "CSS selector (alternative to ref)"},
-          "text": {"type": "string", "description": "Text to type or wait for"},
-          "key": {"type": "string", "description": "Keyboard key (e.g. Enter, Tab, ArrowDown)"},
-          "script": {"type": "string", "description": "JavaScript to evaluate"},
-          "direction": {"type": "string", "enum": ["up", "down"], "description": "Scroll direction"},
-          "fullPage": {"type": "boolean", "description": "Full page screenshot"},
-          "interactive": {"type": "boolean", "description": "Snapshot interactive elements only"},
-          "depth": {"type": "number", "description": "Max snapshot tree depth"},
-          "maxChars": {"type": "number", "description": "Max snapshot text length"},
-          "index": {"type": "number", "description": "Tab index for focus/close"},
-          "accept": {"type": "boolean", "description": "Accept or dismiss dialog"},
-          "values": {"type": "array", "items": {"type": "string"}, "description": "Values for select dropdown"},
-          "paths": {"type": "array", "items": {"type": "string"}, "description": "File paths for upload"},
-          "submit": {"type": "boolean", "description": "Press Enter after typing"},
-          "button": {"type": "string", "enum": ["left", "right", "middle"], "description": "Mouse button for click (default: left)"},
-          "doubleClick": {"type": "boolean", "description": "Double-click instead of single click"},
-          "promptText": {"type": "string", "description": "Text to enter in a prompt dialog before accepting"},
-          "textGone": {"type": "string", "description": "Wait until this text disappears from the page"},
-          "fn": {"type": "string", "description": "JavaScript function to evaluate (alias for script)"},
-          "type": {"type": "string", "enum": ["png", "jpeg"], "description": "Screenshot image format (default: png)"},
-          "level": {"type": "string", "description": "Filter console messages by level (log, warn, error)"},
-          "timeMs": {"type": "number", "description": "Milliseconds to wait"},
-          "timeoutMs": {"type": "number", "description": "Action timeout in ms"},
-          "loadState": {"type": "string", "description": "Wait for page state (load, domcontentloaded, networkidle)"},
-          "subtype": {"type": "string", "description": "For policy ceiling checks"}
+          "action": {
+            "type": "string",
+            "enum": [
+              "snapshot",
+              "navigate",
+              "click",
+              "type",
+              "hover",
+              "press",
+              "select",
+              "scroll",
+              "screenshot",
+              "evaluate",
+              "console",
+              "wait",
+              "tabs",
+              "open",
+              "close",
+              "focus",
+              "pdf",
+              "dialog",
+              "upload",
+              "submit_form",
+              "read_text"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "description": "URL for navigate/open"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Element ref from snapshot (e.g. e1, e2)"
+          },
+          "selector": {
+            "type": "string",
+            "description": "CSS selector (alternative to ref)"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text to type or wait for"
+          },
+          "key": {
+            "type": "string",
+            "description": "Keyboard key (e.g. Enter, Tab, ArrowDown)"
+          },
+          "script": {
+            "type": "string",
+            "description": "JavaScript to evaluate"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down"
+            ],
+            "description": "Scroll direction"
+          },
+          "fullPage": {
+            "type": "boolean",
+            "description": "Full page screenshot"
+          },
+          "interactive": {
+            "type": "boolean",
+            "description": "Snapshot interactive elements only"
+          },
+          "depth": {
+            "type": "number",
+            "description": "Max snapshot tree depth"
+          },
+          "maxChars": {
+            "type": "number",
+            "description": "Max snapshot text length"
+          },
+          "index": {
+            "type": "number",
+            "description": "Tab index for focus/close"
+          },
+          "accept": {
+            "type": "boolean",
+            "description": "Accept or dismiss dialog"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Values for select dropdown"
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "File paths for upload"
+          },
+          "submit": {
+            "type": "boolean",
+            "description": "Press Enter after typing"
+          },
+          "button": {
+            "type": "string",
+            "enum": [
+              "left",
+              "right",
+              "middle"
+            ],
+            "description": "Mouse button for click (default: left)"
+          },
+          "doubleClick": {
+            "type": "boolean",
+            "description": "Double-click instead of single click"
+          },
+          "promptText": {
+            "type": "string",
+            "description": "Text to enter in a prompt dialog before accepting"
+          },
+          "textGone": {
+            "type": "string",
+            "description": "Wait until this text disappears from the page"
+          },
+          "fn": {
+            "type": "string",
+            "description": "JavaScript function to evaluate (alias for script)"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "png",
+              "jpeg"
+            ],
+            "description": "Screenshot image format (default: png)"
+          },
+          "level": {
+            "type": "string",
+            "description": "Filter console messages by level (log, warn, error)"
+          },
+          "timeMs": {
+            "type": "number",
+            "description": "Milliseconds to wait"
+          },
+          "timeoutMs": {
+            "type": "number",
+            "description": "Action timeout in ms"
+          },
+          "loadState": {
+            "type": "string",
+            "description": "Wait for page state (load, domcontentloaded, networkidle)"
+          },
+          "subtype": {
+            "type": "string",
+            "description": "For policy ceiling checks"
+          }
         },
-        "required": ["action"]
+        "required": [
+          "action"
+        ]
       },
       "approval_tier": "human-confirm",
       "timeout": 3600,
       "rate_limit": 30,
       "workspace_access": true,
-      "policy_ceilings": ["evaluate", "execute_js", "submit_form"]
+      "policy_ceilings": [
+        "evaluate",
+        "execute_js",
+        "submit_form"
+      ]
     },
     "web_search": {
       "description": "Search the web using Brave Search API with filtering by country, language, and date.",
@@ -135,21 +310,50 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "query": {"type": "string", "description": "Search query"},
-          "count": {"type": "number", "description": "Number of results (1-10, default 5)"},
-          "country": {"type": "string", "description": "2-letter country code (e.g. US, DE, FR)"},
-          "language": {"type": "string", "description": "Language code (e.g. en, fr, de)"},
-          "freshness": {"type": "string", "description": "Recency filter (d1=past day, w1=past week, m1=past month, y1=past year)"},
-          "date_after": {"type": "string", "description": "Only results after this date (YYYY-MM-DD)"},
-          "date_before": {"type": "string", "description": "Only results before this date (YYYY-MM-DD)"}
+          "query": {
+            "type": "string",
+            "description": "Search query"
+          },
+          "count": {
+            "type": "number",
+            "description": "Number of results (1-10, default 5)"
+          },
+          "country": {
+            "type": "string",
+            "description": "2-letter country code (e.g. US, DE, FR)"
+          },
+          "language": {
+            "type": "string",
+            "description": "Language code (e.g. en, fr, de)"
+          },
+          "freshness": {
+            "type": "string",
+            "description": "Recency filter (d1=past day, w1=past week, m1=past month, y1=past year)"
+          },
+          "date_after": {
+            "type": "string",
+            "description": "Only results after this date (YYYY-MM-DD)"
+          },
+          "date_before": {
+            "type": "string",
+            "description": "Only results before this date (YYYY-MM-DD)"
+          }
         },
-        "required": ["query"]
+        "required": [
+          "query"
+        ]
       },
       "approval_tier": "auto-approve",
-      "secret_refs": ["SEARCH_API_KEY"],
+      "secret_refs": [
+        "SEARCH_API_KEY"
+      ],
       "timeout": 30,
       "rate_limit": 100,
-      "network_policy": {"egress_allow": ["api.search.brave.com:443"]}
+      "network_policy": {
+        "egress_allow": [
+          "api.search.brave.com:443"
+        ]
+      }
     },
     "web_fetch": {
       "description": "Fetch a URL and extract content as markdown or plain text.",
@@ -159,14 +363,43 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "url": {"type": "string", "description": "URL to fetch"},
-          "method": {"type": "string", "enum": ["GET", "POST"], "default": "GET"},
-          "headers": {"type": "object", "description": "HTTP headers"},
-          "body": {"type": "string", "description": "Request body"},
-          "extractMode": {"type": "string", "enum": ["markdown", "text"], "default": "markdown", "description": "Content extraction format"},
-          "maxChars": {"type": "number", "description": "Maximum characters to return (truncates beyond this)"}
+          "url": {
+            "type": "string",
+            "description": "URL to fetch"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST"
+            ],
+            "default": "GET"
+          },
+          "headers": {
+            "type": "object",
+            "description": "HTTP headers"
+          },
+          "body": {
+            "type": "string",
+            "description": "Request body"
+          },
+          "extractMode": {
+            "type": "string",
+            "enum": [
+              "markdown",
+              "text"
+            ],
+            "default": "markdown",
+            "description": "Content extraction format"
+          },
+          "maxChars": {
+            "type": "number",
+            "description": "Maximum characters to return (truncates beyond this)"
+          }
         },
-        "required": ["url"]
+        "required": [
+          "url"
+        ]
       },
       "approval_tier": "auto-approve",
       "timeout": 60,
@@ -194,104 +427,476 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "action": {"type": "string", "enum": ["send", "broadcast", "poll", "poll-vote", "react", "reactions", "read", "edit", "unsend", "reply", "sendWithEffect", "renameGroup", "setGroupIcon", "addParticipant", "removeParticipant", "leaveGroup", "sendAttachment", "delete", "pin", "unpin", "list-pins", "permissions", "thread-create", "thread-list", "thread-reply", "search", "sticker", "sticker-search", "member-info", "role-info", "emoji-list", "emoji-upload", "sticker-upload", "role-add", "role-remove", "channel-info", "channel-list", "channel-create", "channel-edit", "channel-delete", "channel-move", "category-create", "category-edit", "category-delete", "topic-create", "voice-status", "event-list", "event-create", "timeout", "kick", "ban", "set-presence", "download-file"], "description": "Message action to perform (default: send)"},
-          "channel": {"type": "string", "description": "Channel provider (email, telegram, discord, slack, signal, etc.)"},
-          "target": {"type": "string", "description": "Recipient — channel/user ID or name"},
-          "targets": {"type": "array", "items": {"type": "string"}, "description": "Multiple recipients for broadcast"},
-          "message": {"type": "string", "description": "Message text content"},
-          "subject": {"type": "string", "description": "Message subject (email)"},
-          "media": {"type": "string", "description": "Media URL or local file path to attach"},
-          "buffer": {"type": "string", "description": "Base64-encoded attachment payload or data: URL"},
-          "filename": {"type": "string", "description": "Attachment filename"},
-          "contentType": {"type": "string", "description": "Attachment MIME type"},
-          "mimeType": {"type": "string", "description": "Media MIME type (alias for contentType)"},
-          "caption": {"type": "string", "description": "Caption for media attachment"},
-          "path": {"type": "string", "description": "File path for attachment or download"},
-          "filePath": {"type": "string", "description": "Local file path to attach"},
-          "replyTo": {"type": "string", "description": "Message ID to reply to"},
-          "threadId": {"type": "string", "description": "Thread ID for threaded replies"},
-          "emoji": {"type": "string", "description": "Reaction emoji (for react action)"},
-          "messageId": {"type": "string", "description": "Target message ID (for react, delete, edit, pin)"},
-          "message_id": {"type": "string", "description": "Target message ID (snake_case alias)"},
-          "remove": {"type": "boolean", "description": "Remove reaction instead of adding"},
-          "asVoice": {"type": "boolean", "description": "Send audio as voice message"},
-          "silent": {"type": "boolean", "description": "Send without notification"},
-          "buttons": {"type": "array", "description": "Inline keyboard buttons (array of button rows)"},
-          "card": {"type": "object", "description": "Adaptive Card JSON object"},
-          "components": {"type": "object", "description": "Discord components v2 payload"},
-          "effectId": {"type": "string", "description": "Message effect ID (invisible-ink, balloons, etc.)"},
-          "effect": {"type": "string", "description": "Message effect name"},
-          "quoteText": {"type": "string", "description": "Quoted text in reply"},
-          "bestEffort": {"type": "boolean", "description": "Best-effort delivery (skip failures in broadcast)"},
-          "gifPlayback": {"type": "boolean", "description": "Enable GIF playback in message"},
-          "targetAuthor": {"type": "string", "description": "Target message author for reactions"},
-          "targetAuthorUuid": {"type": "string", "description": "Target message author UUID for reactions"},
-          "groupId": {"type": "string", "description": "Group/chat ID for group-scoped actions"},
-          "pollQuestion": {"type": "string", "description": "Poll question text"},
-          "pollOption": {"type": "array", "items": {"type": "string"}, "description": "Poll answer options (min 2)"},
-          "pollDurationHours": {"type": "number", "description": "Poll duration in hours"},
-          "pollMulti": {"type": "boolean", "description": "Allow multiple poll answers"},
-          "pollId": {"type": "string", "description": "Poll ID (for poll-vote)"},
-          "pollOptionId": {"type": "string", "description": "Poll option ID to vote for"},
-          "pollOptionIds": {"type": "array", "items": {"type": "string"}, "description": "Multiple poll option IDs to vote for"},
-          "pollOptionIndex": {"type": "number", "description": "Poll option index to vote for"},
-          "pollOptionIndexes": {"type": "array", "items": {"type": "number"}, "description": "Multiple poll option indexes to vote for"},
-          "pollDurationSeconds": {"type": "number", "description": "Poll duration in seconds"},
-          "pollAnonymous": {"type": "boolean", "description": "Anonymous poll voting"},
-          "pollPublic": {"type": "boolean", "description": "Public poll results"},
-          "channelId": {"type": "string", "description": "Channel ID for channel-scoped actions"},
-          "channelIds": {"type": "array", "items": {"type": "string"}, "description": "Multiple channel IDs"},
-          "guildId": {"type": "string", "description": "Guild/server ID (Discord)"},
-          "userId": {"type": "string", "description": "User ID filter"},
-          "authorId": {"type": "string", "description": "Message author ID filter"},
-          "authorIds": {"type": "array", "items": {"type": "string"}, "description": "Multiple author ID filters"},
-          "roleId": {"type": "string", "description": "Role ID for role actions"},
-          "roleIds": {"type": "array", "items": {"type": "string"}, "description": "Multiple role IDs"},
-          "participant": {"type": "string", "description": "Participant identifier for group actions"},
-          "emojiName": {"type": "string", "description": "Custom emoji name"},
-          "stickerId": {"type": "array", "items": {"type": "string"}, "description": "Sticker ID(s)"},
-          "stickerName": {"type": "string", "description": "Sticker name"},
-          "stickerDesc": {"type": "string", "description": "Sticker description"},
-          "stickerTags": {"type": "string", "description": "Sticker tags (comma-separated)"},
-          "threadName": {"type": "string", "description": "Thread name for thread-create"},
-          "autoArchiveMin": {"type": "number", "description": "Thread auto-archive duration in minutes"},
-          "appliedTags": {"type": "array", "items": {"type": "string"}, "description": "Forum tags to apply to thread"},
-          "query": {"type": "string", "description": "Search query (for search action)"},
-          "eventName": {"type": "string", "description": "Event name for event-create"},
-          "eventType": {"type": "string", "description": "Event type"},
-          "startTime": {"type": "string", "description": "Event start time (ISO 8601)"},
-          "endTime": {"type": "string", "description": "Event end time (ISO 8601)"},
-          "desc": {"type": "string", "description": "Event description"},
-          "location": {"type": "string", "description": "Event location"},
-          "durationMin": {"type": "number", "description": "Event duration in minutes"},
-          "until": {"type": "string", "description": "Recurring event end date"},
-          "reason": {"type": "string", "description": "Moderation reason (for kick, ban, timeout)"},
-          "deleteDays": {"type": "number", "description": "Days of messages to delete on ban (0-7)"},
-          "name": {"type": "string", "description": "Channel/category name for create/edit"},
-          "type": {"type": "number", "description": "Channel type (Discord channel type number)"},
-          "parentId": {"type": "string", "description": "Parent category ID for channel create/move"},
-          "topic": {"type": "string", "description": "Channel topic"},
-          "position": {"type": "number", "description": "Channel position in list"},
-          "nsfw": {"type": "boolean", "description": "Mark channel as NSFW"},
-          "rateLimitPerUser": {"type": "number", "description": "Slowmode delay in seconds"},
-          "categoryId": {"type": "string", "description": "Category ID for channel move"},
-          "clearParent": {"type": "boolean", "description": "Remove channel from category"},
-          "activityType": {"type": "string", "description": "Presence activity type (playing, streaming, listening, watching, competing)"},
-          "activityName": {"type": "string", "description": "Presence activity name"},
-          "activityUrl": {"type": "string", "description": "Presence activity URL (for streaming)"},
-          "activityState": {"type": "string", "description": "Presence custom status text"},
-          "status": {"type": "string", "description": "Presence status (online, idle, dnd, invisible)"},
-          "accountId": {"type": "string", "description": "Account ID for multi-account channels"},
-          "dryRun": {"type": "boolean", "description": "Validate without sending"},
-          "limit": {"type": "number", "description": "Message fetch limit (for read action)"},
-          "before": {"type": "string", "description": "Fetch messages before this ID"},
-          "after": {"type": "string", "description": "Fetch messages after this ID"},
-          "around": {"type": "string", "description": "Fetch messages around this ID"},
-          "fromMe": {"type": "boolean", "description": "Filter to messages from self"},
-          "includeArchived": {"type": "boolean", "description": "Include archived channels/threads"},
-          "timeoutMs": {"type": "number", "description": "Gateway request timeout in milliseconds"}
+          "action": {
+            "type": "string",
+            "enum": [
+              "send",
+              "broadcast",
+              "poll",
+              "poll-vote",
+              "react",
+              "reactions",
+              "read",
+              "edit",
+              "unsend",
+              "reply",
+              "sendWithEffect",
+              "renameGroup",
+              "setGroupIcon",
+              "addParticipant",
+              "removeParticipant",
+              "leaveGroup",
+              "sendAttachment",
+              "delete",
+              "pin",
+              "unpin",
+              "list-pins",
+              "permissions",
+              "thread-create",
+              "thread-list",
+              "thread-reply",
+              "search",
+              "sticker",
+              "sticker-search",
+              "member-info",
+              "role-info",
+              "emoji-list",
+              "emoji-upload",
+              "sticker-upload",
+              "role-add",
+              "role-remove",
+              "channel-info",
+              "channel-list",
+              "channel-create",
+              "channel-edit",
+              "channel-delete",
+              "channel-move",
+              "category-create",
+              "category-edit",
+              "category-delete",
+              "topic-create",
+              "voice-status",
+              "event-list",
+              "event-create",
+              "timeout",
+              "kick",
+              "ban",
+              "set-presence",
+              "download-file"
+            ],
+            "description": "Message action to perform (default: send)"
+          },
+          "channel": {
+            "type": "string",
+            "description": "Channel provider (email, telegram, discord, slack, signal, etc.)"
+          },
+          "target": {
+            "type": "string",
+            "description": "Recipient \u2014 channel/user ID or name"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Multiple recipients for broadcast"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message text content"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Message subject (email)"
+          },
+          "media": {
+            "type": "string",
+            "description": "Media URL or local file path to attach"
+          },
+          "buffer": {
+            "type": "string",
+            "description": "Base64-encoded attachment payload or data: URL"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Attachment filename"
+          },
+          "contentType": {
+            "type": "string",
+            "description": "Attachment MIME type"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "Media MIME type (alias for contentType)"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Caption for media attachment"
+          },
+          "path": {
+            "type": "string",
+            "description": "File path for attachment or download"
+          },
+          "filePath": {
+            "type": "string",
+            "description": "Local file path to attach"
+          },
+          "replyTo": {
+            "type": "string",
+            "description": "Message ID to reply to"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread ID for threaded replies"
+          },
+          "emoji": {
+            "type": "string",
+            "description": "Reaction emoji (for react action)"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "Target message ID (for react, delete, edit, pin)"
+          },
+          "message_id": {
+            "type": "string",
+            "description": "Target message ID (snake_case alias)"
+          },
+          "remove": {
+            "type": "boolean",
+            "description": "Remove reaction instead of adding"
+          },
+          "asVoice": {
+            "type": "boolean",
+            "description": "Send audio as voice message"
+          },
+          "silent": {
+            "type": "boolean",
+            "description": "Send without notification"
+          },
+          "buttons": {
+            "type": "array",
+            "description": "Inline keyboard buttons (array of button rows)"
+          },
+          "card": {
+            "type": "object",
+            "description": "Adaptive Card JSON object"
+          },
+          "components": {
+            "type": "object",
+            "description": "Discord components v2 payload"
+          },
+          "effectId": {
+            "type": "string",
+            "description": "Message effect ID (invisible-ink, balloons, etc.)"
+          },
+          "effect": {
+            "type": "string",
+            "description": "Message effect name"
+          },
+          "quoteText": {
+            "type": "string",
+            "description": "Quoted text in reply"
+          },
+          "bestEffort": {
+            "type": "boolean",
+            "description": "Best-effort delivery (skip failures in broadcast)"
+          },
+          "gifPlayback": {
+            "type": "boolean",
+            "description": "Enable GIF playback in message"
+          },
+          "targetAuthor": {
+            "type": "string",
+            "description": "Target message author for reactions"
+          },
+          "targetAuthorUuid": {
+            "type": "string",
+            "description": "Target message author UUID for reactions"
+          },
+          "groupId": {
+            "type": "string",
+            "description": "Group/chat ID for group-scoped actions"
+          },
+          "pollQuestion": {
+            "type": "string",
+            "description": "Poll question text"
+          },
+          "pollOption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Poll answer options (min 2)"
+          },
+          "pollDurationHours": {
+            "type": "number",
+            "description": "Poll duration in hours"
+          },
+          "pollMulti": {
+            "type": "boolean",
+            "description": "Allow multiple poll answers"
+          },
+          "pollId": {
+            "type": "string",
+            "description": "Poll ID (for poll-vote)"
+          },
+          "pollOptionId": {
+            "type": "string",
+            "description": "Poll option ID to vote for"
+          },
+          "pollOptionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Multiple poll option IDs to vote for"
+          },
+          "pollOptionIndex": {
+            "type": "number",
+            "description": "Poll option index to vote for"
+          },
+          "pollOptionIndexes": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "Multiple poll option indexes to vote for"
+          },
+          "pollDurationSeconds": {
+            "type": "number",
+            "description": "Poll duration in seconds"
+          },
+          "pollAnonymous": {
+            "type": "boolean",
+            "description": "Anonymous poll voting"
+          },
+          "pollPublic": {
+            "type": "boolean",
+            "description": "Public poll results"
+          },
+          "channelId": {
+            "type": "string",
+            "description": "Channel ID for channel-scoped actions"
+          },
+          "channelIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Multiple channel IDs"
+          },
+          "guildId": {
+            "type": "string",
+            "description": "Guild/server ID (Discord)"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID filter"
+          },
+          "authorId": {
+            "type": "string",
+            "description": "Message author ID filter"
+          },
+          "authorIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Multiple author ID filters"
+          },
+          "roleId": {
+            "type": "string",
+            "description": "Role ID for role actions"
+          },
+          "roleIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Multiple role IDs"
+          },
+          "participant": {
+            "type": "string",
+            "description": "Participant identifier for group actions"
+          },
+          "emojiName": {
+            "type": "string",
+            "description": "Custom emoji name"
+          },
+          "stickerId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Sticker ID(s)"
+          },
+          "stickerName": {
+            "type": "string",
+            "description": "Sticker name"
+          },
+          "stickerDesc": {
+            "type": "string",
+            "description": "Sticker description"
+          },
+          "stickerTags": {
+            "type": "string",
+            "description": "Sticker tags (comma-separated)"
+          },
+          "threadName": {
+            "type": "string",
+            "description": "Thread name for thread-create"
+          },
+          "autoArchiveMin": {
+            "type": "number",
+            "description": "Thread auto-archive duration in minutes"
+          },
+          "appliedTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Forum tags to apply to thread"
+          },
+          "query": {
+            "type": "string",
+            "description": "Search query (for search action)"
+          },
+          "eventName": {
+            "type": "string",
+            "description": "Event name for event-create"
+          },
+          "eventType": {
+            "type": "string",
+            "description": "Event type"
+          },
+          "startTime": {
+            "type": "string",
+            "description": "Event start time (ISO 8601)"
+          },
+          "endTime": {
+            "type": "string",
+            "description": "Event end time (ISO 8601)"
+          },
+          "desc": {
+            "type": "string",
+            "description": "Event description"
+          },
+          "location": {
+            "type": "string",
+            "description": "Event location"
+          },
+          "durationMin": {
+            "type": "number",
+            "description": "Event duration in minutes"
+          },
+          "until": {
+            "type": "string",
+            "description": "Recurring event end date"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Moderation reason (for kick, ban, timeout)"
+          },
+          "deleteDays": {
+            "type": "number",
+            "description": "Days of messages to delete on ban (0-7)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Channel/category name for create/edit"
+          },
+          "type": {
+            "type": "number",
+            "description": "Channel type (Discord channel type number)"
+          },
+          "parentId": {
+            "type": "string",
+            "description": "Parent category ID for channel create/move"
+          },
+          "topic": {
+            "type": "string",
+            "description": "Channel topic"
+          },
+          "position": {
+            "type": "number",
+            "description": "Channel position in list"
+          },
+          "nsfw": {
+            "type": "boolean",
+            "description": "Mark channel as NSFW"
+          },
+          "rateLimitPerUser": {
+            "type": "number",
+            "description": "Slowmode delay in seconds"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Category ID for channel move"
+          },
+          "clearParent": {
+            "type": "boolean",
+            "description": "Remove channel from category"
+          },
+          "activityType": {
+            "type": "string",
+            "description": "Presence activity type (playing, streaming, listening, watching, competing)"
+          },
+          "activityName": {
+            "type": "string",
+            "description": "Presence activity name"
+          },
+          "activityUrl": {
+            "type": "string",
+            "description": "Presence activity URL (for streaming)"
+          },
+          "activityState": {
+            "type": "string",
+            "description": "Presence custom status text"
+          },
+          "status": {
+            "type": "string",
+            "description": "Presence status (online, idle, dnd, invisible)"
+          },
+          "accountId": {
+            "type": "string",
+            "description": "Account ID for multi-account channels"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "description": "Validate without sending"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Message fetch limit (for read action)"
+          },
+          "before": {
+            "type": "string",
+            "description": "Fetch messages before this ID"
+          },
+          "after": {
+            "type": "string",
+            "description": "Fetch messages after this ID"
+          },
+          "around": {
+            "type": "string",
+            "description": "Fetch messages around this ID"
+          },
+          "fromMe": {
+            "type": "boolean",
+            "description": "Filter to messages from self"
+          },
+          "includeArchived": {
+            "type": "boolean",
+            "description": "Include archived channels/threads"
+          },
+          "timeoutMs": {
+            "type": "number",
+            "description": "Gateway request timeout in milliseconds"
+          }
         },
-        "required": ["message"]
+        "required": [
+          "message"
+        ]
       },
       "approval_tier": "human-confirm",
       "timeout": 30,
@@ -306,13 +911,31 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "session_key": {"type": "string", "description": "Target session key"},
-          "message": {"type": "string", "description": "Message to send"},
-          "label": {"type": "string", "description": "Display label for the session"},
-          "agentId": {"type": "string", "description": "Agent identifier for the message"},
-          "timeoutSeconds": {"type": "number", "description": "Response timeout in seconds (default: 10)"}
+          "session_key": {
+            "type": "string",
+            "description": "Target session key"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message to send"
+          },
+          "label": {
+            "type": "string",
+            "description": "Display label for the session"
+          },
+          "agentId": {
+            "type": "string",
+            "description": "Agent identifier for the message"
+          },
+          "timeoutSeconds": {
+            "type": "number",
+            "description": "Response timeout in seconds (default: 10)"
+          }
         },
-        "required": ["session_key", "message"]
+        "required": [
+          "session_key",
+          "message"
+        ]
       },
       "approval_tier": "human-confirm",
       "timeout": 30,
@@ -326,16 +949,50 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "action": {"type": "string", "enum": ["create", "list", "delete", "update", "run", "runs"], "description": "Cron action"},
-          "schedule": {"type": "string", "description": "Cron expression (e.g. */5 * * * *)"},
-          "command": {"type": "string", "description": "Command to schedule"},
-          "jobId": {"type": "string", "description": "Job identifier (UUID)"},
-          "name": {"type": "string", "description": "Optional human-readable label for the job"},
-          "enabled": {"type": "boolean", "description": "Enable or disable the job (for update)"},
-          "limit": {"type": "number", "description": "Max entries to return (for runs, default 20)"},
-          "status": {"type": "string", "description": "Filter runs by status (ok or error)"}
+          "action": {
+            "type": "string",
+            "enum": [
+              "create",
+              "list",
+              "delete",
+              "update",
+              "run",
+              "runs"
+            ],
+            "description": "Cron action"
+          },
+          "schedule": {
+            "type": "string",
+            "description": "Cron expression (e.g. */5 * * * *)"
+          },
+          "command": {
+            "type": "string",
+            "description": "Command to schedule"
+          },
+          "jobId": {
+            "type": "string",
+            "description": "Job identifier (UUID)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional human-readable label for the job"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Enable or disable the job (for update)"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max entries to return (for runs, default 20)"
+          },
+          "status": {
+            "type": "string",
+            "description": "Filter runs by status (ok or error)"
+          }
         },
-        "required": ["action"]
+        "required": [
+          "action"
+        ]
       },
       "approval_tier": "human-confirm",
       "timeout": 30,
@@ -349,12 +1006,33 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "action": {"type": "string", "enum": ["list", "poll", "log", "kill", "remove"], "description": "Process management action"},
-          "sessionId": {"type": "string", "description": "Background session identifier"},
-          "offset": {"type": "number", "description": "Byte offset for log pagination"},
-          "limit": {"type": "number", "description": "Max bytes to return for log (default 50000)"}
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "poll",
+              "log",
+              "kill",
+              "remove"
+            ],
+            "description": "Process management action"
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "Background session identifier"
+          },
+          "offset": {
+            "type": "number",
+            "description": "Byte offset for log pagination"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max bytes to return for log (default 50000)"
+          }
         },
-        "required": ["action"]
+        "required": [
+          "action"
+        ]
       },
       "approval_tier": "auto-approve",
       "timeout": 30,
@@ -368,14 +1046,31 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "prompt": {"type": "string", "description": "What to analyze in the image(s) (default: Describe the image.)"},
-          "image": {"type": "string", "description": "Image path (relative to workspace), URL, or data: URL"},
-          "images": {"type": "array", "items": {"type": "string"}, "description": "Multiple images to analyze (max 20)"},
-          "maxTokens": {"type": "number", "description": "Maximum tokens in the analysis response (default: 4096)"}
+          "prompt": {
+            "type": "string",
+            "description": "What to analyze in the image(s) (default: Describe the image.)"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image path (relative to workspace), URL, or data: URL"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Multiple images to analyze (max 20)"
+          },
+          "maxTokens": {
+            "type": "number",
+            "description": "Maximum tokens in the analysis response (default: 4096)"
+          }
         }
       },
       "approval_tier": "auto-approve",
-      "secret_refs": ["VISION_API_KEY"],
+      "secret_refs": [
+        "VISION_API_KEY"
+      ],
       "timeout": 120,
       "rate_limit": 50,
       "network_policy": null
@@ -388,14 +1083,27 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "text": {"type": "string", "description": "Text to synthesize"},
-          "voice": {"type": "string", "description": "Voice identifier"},
-          "channel": {"type": "string", "description": "Output channel (default: file)"}
+          "text": {
+            "type": "string",
+            "description": "Text to synthesize"
+          },
+          "voice": {
+            "type": "string",
+            "description": "Voice identifier"
+          },
+          "channel": {
+            "type": "string",
+            "description": "Output channel (default: file)"
+          }
         },
-        "required": ["text"]
+        "required": [
+          "text"
+        ]
       },
       "approval_tier": "auto-approve",
-      "secret_refs": ["TTS_API_KEY"],
+      "secret_refs": [
+        "TTS_API_KEY"
+      ],
       "timeout": 60,
       "rate_limit": 50
     },
@@ -407,24 +1115,88 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "action": {"type": "string", "enum": ["present", "hide", "navigate", "eval", "snapshot", "a2ui_push", "a2ui_reset"], "description": "Canvas action to perform"},
-          "node": {"type": "string", "description": "Target node ID"},
-          "target": {"type": "string", "description": "URL for present/navigate"},
-          "url": {"type": "string", "description": "URL for present/navigate (alias for target)"},
-          "x": {"type": "number", "description": "Canvas X position"},
-          "y": {"type": "number", "description": "Canvas Y position"},
-          "width": {"type": "number", "description": "Canvas width in pixels"},
-          "height": {"type": "number", "description": "Canvas height in pixels"},
-          "javaScript": {"type": "string", "description": "JavaScript code to evaluate (eval action)"},
-          "outputFormat": {"type": "string", "enum": ["png", "jpg", "jpeg"], "description": "Snapshot image format (default: png)"},
-          "maxWidth": {"type": "number", "description": "Maximum snapshot width in pixels"},
-          "quality": {"type": "number", "description": "JPEG quality (0-100)"},
-          "delayMs": {"type": "number", "description": "Delay before snapshot in milliseconds"},
-          "jsonl": {"type": "string", "description": "JSONL content for A2UI push"},
-          "jsonlPath": {"type": "string", "description": "Path to JSONL file for A2UI push"},
-          "timeoutMs": {"type": "number", "description": "Gateway request timeout in milliseconds"}
+          "action": {
+            "type": "string",
+            "enum": [
+              "present",
+              "hide",
+              "navigate",
+              "eval",
+              "snapshot",
+              "a2ui_push",
+              "a2ui_reset"
+            ],
+            "description": "Canvas action to perform"
+          },
+          "node": {
+            "type": "string",
+            "description": "Target node ID"
+          },
+          "target": {
+            "type": "string",
+            "description": "URL for present/navigate"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL for present/navigate (alias for target)"
+          },
+          "x": {
+            "type": "number",
+            "description": "Canvas X position"
+          },
+          "y": {
+            "type": "number",
+            "description": "Canvas Y position"
+          },
+          "width": {
+            "type": "number",
+            "description": "Canvas width in pixels"
+          },
+          "height": {
+            "type": "number",
+            "description": "Canvas height in pixels"
+          },
+          "javaScript": {
+            "type": "string",
+            "description": "JavaScript code to evaluate (eval action)"
+          },
+          "outputFormat": {
+            "type": "string",
+            "enum": [
+              "png",
+              "jpg",
+              "jpeg"
+            ],
+            "description": "Snapshot image format (default: png)"
+          },
+          "maxWidth": {
+            "type": "number",
+            "description": "Maximum snapshot width in pixels"
+          },
+          "quality": {
+            "type": "number",
+            "description": "JPEG quality (0-100)"
+          },
+          "delayMs": {
+            "type": "number",
+            "description": "Delay before snapshot in milliseconds"
+          },
+          "jsonl": {
+            "type": "string",
+            "description": "JSONL content for A2UI push"
+          },
+          "jsonlPath": {
+            "type": "string",
+            "description": "Path to JSONL file for A2UI push"
+          },
+          "timeoutMs": {
+            "type": "number",
+            "description": "Gateway request timeout in milliseconds"
+          }
         },
-        "required": ["action"]
+        "required": [
+          "action"
+        ]
       },
       "approval_tier": "human-confirm",
       "timeout": 60,
@@ -446,174 +1218,207 @@
       "parameter_schema": {
         "type": "object",
         "properties": {
-          "action": {"type": "string", "enum": ["status", "describe", "pending", "approve", "reject", "notify", "camera_snap", "camera_list", "camera_clip", "photos_latest", "screen_record", "location_get", "notifications_list", "notifications_action", "device_status", "device_info", "device_permissions", "device_health", "run", "invoke"], "description": "Node action to perform"},
-          "node": {"type": "string", "description": "Node identifier or query string"},
-          "requestId": {"type": "string", "description": "Pairing request ID (for approve/reject)"},
-          "title": {"type": "string", "description": "Notification title"},
-          "body": {"type": "string", "description": "Notification body"},
-          "sound": {"type": "string", "description": "Notification sound identifier"},
-          "priority": {"type": "string", "enum": ["passive", "active", "timeSensitive"], "description": "Notification priority"},
-          "delivery": {"type": "string", "enum": ["system", "overlay", "auto"], "description": "Notification delivery method"},
-          "facing": {"type": "string", "enum": ["front", "back", "both"], "description": "Camera facing direction"},
-          "maxWidth": {"type": "number", "description": "Maximum image width in pixels"},
-          "quality": {"type": "number", "description": "Image quality (0-1)"},
-          "delayMs": {"type": "number", "description": "Delay before capture in milliseconds"},
-          "deviceId": {"type": "string", "description": "Specific camera device ID"},
-          "limit": {"type": "number", "description": "Photo limit (1-20)"},
-          "duration": {"type": "string", "description": "Video duration string (e.g. 5s)"},
-          "durationMs": {"type": "number", "description": "Video duration in milliseconds (max 300000)"},
-          "includeAudio": {"type": "boolean", "description": "Include audio in video recording"},
-          "fps": {"type": "number", "description": "Screen recording frame rate"},
-          "screenIndex": {"type": "number", "description": "Screen index for recording (0-based)"},
-          "outPath": {"type": "string", "description": "Output file path for recording"},
-          "maxAgeMs": {"type": "number", "description": "Maximum age of cached location in ms"},
-          "locationTimeoutMs": {"type": "number", "description": "Location query timeout in ms"},
-          "desiredAccuracy": {"type": "string", "enum": ["coarse", "balanced", "precise"], "description": "Location accuracy level"},
-          "notificationAction": {"type": "string", "enum": ["open", "dismiss", "reply"], "description": "Notification action to perform"},
-          "notificationKey": {"type": "string", "description": "Notification identifier"},
-          "notificationReplyText": {"type": "string", "description": "Reply text for notification action"},
-          "command": {"type": "array", "items": {"type": "string"}, "description": "Command argv array (for run action)"},
-          "cwd": {"type": "string", "description": "Working directory for command"},
-          "env": {"type": "array", "items": {"type": "string"}, "description": "Environment variable pairs (KEY=VALUE)"},
-          "commandTimeoutMs": {"type": "number", "description": "Command execution timeout in ms"},
-          "invokeTimeoutMs": {"type": "number", "description": "Node invoke timeout in ms"},
-          "needsScreenRecording": {"type": "boolean", "description": "Whether command needs screen recording permission"},
-          "invokeCommand": {"type": "string", "description": "Custom invoke command name"},
-          "invokeParamsJson": {"type": "string", "description": "JSON-encoded parameters for invoke"},
-          "timeoutMs": {"type": "number", "description": "Gateway request timeout in milliseconds"}
+          "action": {
+            "type": "string",
+            "enum": [
+              "status",
+              "describe",
+              "pending",
+              "approve",
+              "reject",
+              "notify",
+              "camera_snap",
+              "camera_list",
+              "camera_clip",
+              "photos_latest",
+              "screen_record",
+              "location_get",
+              "notifications_list",
+              "notifications_action",
+              "device_status",
+              "device_info",
+              "device_permissions",
+              "device_health",
+              "run",
+              "invoke"
+            ],
+            "description": "Node action to perform"
+          },
+          "node": {
+            "type": "string",
+            "description": "Node identifier or query string"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Pairing request ID (for approve/reject)"
+          },
+          "title": {
+            "type": "string",
+            "description": "Notification title"
+          },
+          "body": {
+            "type": "string",
+            "description": "Notification body"
+          },
+          "sound": {
+            "type": "string",
+            "description": "Notification sound identifier"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "passive",
+              "active",
+              "timeSensitive"
+            ],
+            "description": "Notification priority"
+          },
+          "delivery": {
+            "type": "string",
+            "enum": [
+              "system",
+              "overlay",
+              "auto"
+            ],
+            "description": "Notification delivery method"
+          },
+          "facing": {
+            "type": "string",
+            "enum": [
+              "front",
+              "back",
+              "both"
+            ],
+            "description": "Camera facing direction"
+          },
+          "maxWidth": {
+            "type": "number",
+            "description": "Maximum image width in pixels"
+          },
+          "quality": {
+            "type": "number",
+            "description": "Image quality (0-1)"
+          },
+          "delayMs": {
+            "type": "number",
+            "description": "Delay before capture in milliseconds"
+          },
+          "deviceId": {
+            "type": "string",
+            "description": "Specific camera device ID"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Photo limit (1-20)"
+          },
+          "duration": {
+            "type": "string",
+            "description": "Video duration string (e.g. 5s)"
+          },
+          "durationMs": {
+            "type": "number",
+            "description": "Video duration in milliseconds (max 300000)"
+          },
+          "includeAudio": {
+            "type": "boolean",
+            "description": "Include audio in video recording"
+          },
+          "fps": {
+            "type": "number",
+            "description": "Screen recording frame rate"
+          },
+          "screenIndex": {
+            "type": "number",
+            "description": "Screen index for recording (0-based)"
+          },
+          "outPath": {
+            "type": "string",
+            "description": "Output file path for recording"
+          },
+          "maxAgeMs": {
+            "type": "number",
+            "description": "Maximum age of cached location in ms"
+          },
+          "locationTimeoutMs": {
+            "type": "number",
+            "description": "Location query timeout in ms"
+          },
+          "desiredAccuracy": {
+            "type": "string",
+            "enum": [
+              "coarse",
+              "balanced",
+              "precise"
+            ],
+            "description": "Location accuracy level"
+          },
+          "notificationAction": {
+            "type": "string",
+            "enum": [
+              "open",
+              "dismiss",
+              "reply"
+            ],
+            "description": "Notification action to perform"
+          },
+          "notificationKey": {
+            "type": "string",
+            "description": "Notification identifier"
+          },
+          "notificationReplyText": {
+            "type": "string",
+            "description": "Reply text for notification action"
+          },
+          "command": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Command argv array (for run action)"
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Working directory for command"
+          },
+          "env": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Environment variable pairs (KEY=VALUE)"
+          },
+          "commandTimeoutMs": {
+            "type": "number",
+            "description": "Command execution timeout in ms"
+          },
+          "invokeTimeoutMs": {
+            "type": "number",
+            "description": "Node invoke timeout in ms"
+          },
+          "needsScreenRecording": {
+            "type": "boolean",
+            "description": "Whether command needs screen recording permission"
+          },
+          "invokeCommand": {
+            "type": "string",
+            "description": "Custom invoke command name"
+          },
+          "invokeParamsJson": {
+            "type": "string",
+            "description": "JSON-encoded parameters for invoke"
+          },
+          "timeoutMs": {
+            "type": "number",
+            "description": "Gateway request timeout in milliseconds"
+          }
         },
-        "required": ["action"]
+        "required": [
+          "action"
+        ]
       },
       "approval_tier": "human-confirm",
       "timeout": 120,
       "rate_limit": 30
-    },
-    "fleet_status_query": {
-      "description": "Query fleet health status: summary, device detail, tier breakdown, or risk ranking. Read-only.",
-      "persistent": false,
-      "docker_image": "fleet-control",
-      "command_template": "python /app/fleet_status.py",
-      "parameter_schema": {
-        "type": "object",
-        "properties": {
-          "query_type": {"type": "string", "enum": ["summary", "device_detail", "tier_breakdown", "risk_ranking"], "description": "Type of fleet query"},
-          "device_id": {"type": "string", "description": "Device ID (required for device_detail)"},
-          "session_hash": {"type": "string", "description": "Pipeline session hash from the orchestrator notification. Links proposals to the simulation session for unified dashboard tracking."},
-          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Provided in the orchestrator cycle notification.", "additionalProperties": {"type": "string"}}
-        },
-        "required": ["query_type"]
-      },
-      "approval_tier": "auto-approve",
-      "timeout": 30,
-      "rate_limit": 200,
-      "workspace_access": true
-    },
-    "fleet_underclock": {
-      "description": "Reduce a device's clock frequency to a target percentage of stock. Validates fleet capacity constraints.",
-      "persistent": false,
-      "docker_image": "fleet-control",
-      "command_template": "python /app/control_action.py --action underclock",
-      "parameter_schema": {
-        "type": "object",
-        "properties": {
-          "device_id": {"type": "string", "description": "Target device ID (e.g. ASIC-007)"},
-          "target_pct": {"type": "number", "minimum": 50, "maximum": 100, "description": "Target clock percentage of stock (50-100)"},
-          "reason": {"type": "string", "description": "Rationale for the underclock action"},
-          "session_hash": {"type": "string", "description": "Pipeline session hash from the orchestrator notification. Links proposals to the simulation session for unified dashboard tracking."},
-          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Provided in the orchestrator cycle notification.", "additionalProperties": {"type": "string"}}
-        },
-        "required": ["device_id", "target_pct", "reason"]
-      },
-      "approval_tier": "human-confirm",
-      "timeout": 60,
-      "rate_limit": 50,
-      "workspace_access": true
-    },
-    "fleet_schedule_maintenance": {
-      "description": "Schedule a device for maintenance. Validates fleet redundancy and capacity constraints.",
-      "persistent": false,
-      "docker_image": "fleet-control",
-      "command_template": "python /app/control_action.py --action maintenance",
-      "parameter_schema": {
-        "type": "object",
-        "properties": {
-          "device_id": {"type": "string", "description": "Target device ID"},
-          "maintenance_type": {"type": "string", "enum": ["inspection", "minor_repair", "major_repair", "firmware_update"], "description": "Type of maintenance"},
-          "urgency": {"type": "string", "enum": ["immediate", "next_window", "scheduled"], "description": "Scheduling urgency"},
-          "reason": {"type": "string", "description": "Rationale for the maintenance request"},
-          "session_hash": {"type": "string", "description": "Pipeline session hash from the orchestrator notification. Links proposals to the simulation session for unified dashboard tracking."},
-          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Provided in the orchestrator cycle notification.", "additionalProperties": {"type": "string"}}
-        },
-        "required": ["device_id", "maintenance_type", "urgency", "reason"]
-      },
-      "approval_tier": "human-confirm",
-      "timeout": 60,
-      "rate_limit": 20,
-      "workspace_access": true
-    },
-    "fleet_emergency_shutdown": {
-      "description": "Immediate device shutdown. Policy ceiling: never auto-approves via learned rules.",
-      "persistent": false,
-      "docker_image": "fleet-control",
-      "command_template": "python /app/control_action.py --action shutdown",
-      "parameter_schema": {
-        "type": "object",
-        "properties": {
-          "device_id": {"type": "string", "description": "Target device ID"},
-          "reason": {"type": "string", "description": "Rationale for emergency shutdown"},
-          "schedule_inspection": {"type": "boolean", "description": "Also schedule post-shutdown inspection"},
-          "action": {"type": "string", "const": "emergency_shutdown", "description": "Action type for policy ceiling enforcement"},
-          "session_hash": {"type": "string", "description": "Pipeline session hash from the orchestrator notification. Links proposals to the simulation session for unified dashboard tracking."},
-          "input_files": {"type": "object", "description": "File references for fleet data. Maps filename to @hash.task:var reference or azure:// URI. Provided in the orchestrator cycle notification.", "additionalProperties": {"type": "string"}}
-        },
-        "required": ["device_id", "reason", "action"]
-      },
-      "approval_tier": "human-confirm",
-      "timeout": 60,
-      "rate_limit": 5,
-      "workspace_access": true,
-      "policy_ceilings": ["emergency_shutdown"]
-    },
-    "fleet_pipeline_status": {
-      "description": "Query the Validance API for the latest mdk.score pipeline run. Returns session_hash, input_files refs, and cycle info. Read-only, no workspace needed.",
-      "persistent": false,
-      "docker_image": "fleet-control",
-      "command_template": "python /app/pipeline_status.py",
-      "environment": { "VALIDANCE_API_URL": "http://172.17.0.1:8000" },
-      "parameter_schema": {
-        "type": "object",
-        "properties": {
-          "session_hash": {"type": "string", "description": "Optional: filter to a specific simulation session"}
-        }
-      },
-      "approval_tier": "auto-approve",
-      "timeout": 15,
-      "rate_limit": 200
-    },
-    "knowledge_query": {
-      "description": "Query organizational knowledge base using RAG (retrieval-augmented generation). Read-only.",
-      "persistent": false,
-      "docker_image": "rag-tasks",
-      "command_template": "python /app/scripts/knowledge_query.py",
-      "environment": {
-        "TOP_K": "5",
-        "LLM_MODEL": "gpt-4.1-mini",
-        "EMBEDDING_MODEL": "text-embedding-3-small"
-      },
-      "parameter_schema": {
-        "type": "object",
-        "properties": {
-          "query": {"type": "string", "description": "Natural language question to answer from the knowledge base"},
-          "session_hash": {"type": "string", "description": "Pipeline session hash. Links proposals to the simulation session for unified dashboard tracking."},
-          "input_files": {"type": "object", "description": "File references for knowledge index. Maps filename to @hash.task:var reference. Must include index.json pointing to the ingested knowledge base.", "additionalProperties": {"type": "string"}}
-        },
-        "required": ["query"]
-      },
-      "approval_tier": "auto-approve",
-      "secret_refs": ["OPENAI_API_KEY"],
-      "timeout": 60,
-      "rate_limit": 100,
-      "network_policy": {"egress_allow": ["api.openai.com:443"]}
     },
     "gateway": {
       "approval_tier": "always-deny"
@@ -623,8 +1428,6 @@
     "sandbox": "validance-sandbox:latest",
     "comms": "validance-comms:latest",
     "web": "validance-web:latest",
-    "browser": "validance-browser:latest",
-    "fleet-control": "fleet-control:latest",
-    "rag-tasks": "rag-tasks:latest"
+    "browser": "validance-browser:latest"
   }
 }

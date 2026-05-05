@@ -27,6 +27,10 @@
         "type": "string",
         "default": "localhost",
         "description": "Host/IP for approval webhook URL as seen from the Validance container (e.g. Docker bridge IP)"
+      },
+      "catalogOverlayPath": {
+        "type": "string",
+        "description": "Optional absolute path to a catalog overlay JSON file. Templates in the overlay are merged into the bundled default catalog (overlay wins on key collision). Used by operators to add deployment-specific tools without modifying the published plugin. Falls back to the SAFECLAW_CATALOG_OVERLAY env var if unset."
       }
     }
   },
@@ -34,6 +38,7 @@
     "kernelUrl": { "label": "Kernel URL", "placeholder": "http://localhost:7400" },
     "trustProfile": { "label": "Trust Profile" },
     "gatewayPort": { "label": "Gateway Port" },
-    "gatewayHost": { "label": "Gateway Host", "placeholder": "localhost" }
+    "gatewayHost": { "label": "Gateway Host", "placeholder": "localhost" },
+    "catalogOverlayPath": { "label": "Catalog Overlay Path", "placeholder": "/etc/safeclaw/local-overlay.json" }
   }
 }

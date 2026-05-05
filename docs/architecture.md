@@ -92,7 +92,29 @@ A second tool, `safeclaw_check`, is registered for polling the result of pending
 
 ### 3.2 Tool Catalog
 
-The catalog (`catalog/default.json`) defines the OpenClaw-native tool replacements — 16 templates across 4 Docker images and 3 approval tiers. Deployment-specific tools (vertical extensions, operational endpoints) belong in an optional overlay file loaded from deployment config; they are not part of the published artifact. See [ADR-002 — Catalog overlay separation](ADR-002-catalog-overlay-separation.md) for the overlay loading contract and per-entry tier-override format.
+The catalog is a **two-layer structure** (ADR-002):
+
+- **`catalog/default.json`** — bundled with the npm package. 16 OpenClaw-native templates across 4 Docker images and 3 approval tiers. Universal — every SafeClaw deployment receives these.
+- **Overlay file (optional)** — supplied by the operator at deployment time, lives outside the package. Adds deployment-specific tools (vertical extensions, operational endpoints) without modifying the published artifact.
+
+At plugin registration, `Catalog.load(profile, overlayPath?)` reads the bundled default, optionally merges the overlay (overlay wins on key collision), then applies the trust profile.
+
+**Overlay path resolution order:**
+
+1. `catalogOverlayPath` field in the plugin config (`openclaw.plugin.json` → `entries["@validance/safeclaw"].config`).
+2. `SAFECLAW_CATALOG_OVERLAY` environment variable.
+3. None — load default only.
+
+If a path is supplied but the file is missing or malformed, plugin registration fails loudly. Operator misconfiguration must not silently degrade to a different catalog than the operator declared.
+
+**Tier overrides** can be expressed two ways:
+
+- **Blanket profile rule** — `TRUST_OVERRIDES` in `src/catalog.ts`. Applies to every OpenClaw-native template uniformly per profile (e.g. `conservative` promotes everything to `human-confirm`).
+- **Per-entry override** — `tier_overrides: { conservative: "human-confirm", "power-user": "auto-approve" }` on a template. Wins over the blanket rule. Lets overlay entries declare their own profile semantics without editing shared code.
+
+Tier resolution per template, per profile: per-entry override → blanket profile rule → entry's own `approval_tier`.
+
+For the full overlay loading contract, migration plan, and rationale, see [ADR-002 — Catalog overlay separation](ADR-002-catalog-overlay-separation.md).
 
 | Action | Image | Approval Tier | Timeout | Rate Limit | Persistent | Notes |
 |--------|-------|---------------|---------|------------|------------|-------|

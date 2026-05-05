@@ -2,6 +2,7 @@
  * Local catalog for tool descriptions and trust profiles.
  *
  * Loads `catalog/default.json` and applies trust profile overrides.
+ * Optionally merges a deployment-specific overlay (ADR-002).
  * Generates the meta-tool description from template parameter schemas.
  */
 
@@ -17,6 +18,13 @@ export interface TemplateEntry {
   command_template?: string;
   parameter_schema?: Record<string, unknown>;
   approval_tier: string;
+  /**
+   * Per-entry trust-profile tier overrides (ADR-002 § 3.3).
+   * Keyed by profile name; value replaces `approval_tier` under that profile.
+   * Lets overlay entries declare their own profile semantics without
+   * editing the shared blanket-rule table.
+   */
+  tier_overrides?: Partial<Record<TrustProfile, string>>;
   timeout?: number;
   rate_limit?: number;
   secret_refs?: string[];
@@ -33,7 +41,13 @@ export interface CatalogData {
 export type TrustProfile = "conservative" | "standard" | "power-user";
 
 /**
- * Trust profile tier overrides.
+ * Blanket trust-profile rules — apply to every OpenClaw-native template
+ * regardless of action name. Per-entry refinements live in
+ * `TemplateEntry.tier_overrides` (ADR-002 § 3.3).
+ *
+ * `conservative` promotes everything that's not already always-deny up
+ * to human-confirm. `power-user` relaxes the historically-confirm-only
+ * native actions to auto-approve.
  */
 const TRUST_OVERRIDES: Record<TrustProfile, Record<string, string>> = {
   conservative: {
@@ -52,8 +66,6 @@ const TRUST_OVERRIDES: Record<TrustProfile, Record<string, string>> = {
     canvas: "human-confirm",
     nodes: "human-confirm",
     gateway: "always-deny",
-    // Fleet: read-only queries still require confirmation in conservative mode
-    fleet_status_query: "human-confirm",
   },
   standard: {
     // default.json already has standard tiers
@@ -61,10 +73,6 @@ const TRUST_OVERRIDES: Record<TrustProfile, Record<string, string>> = {
   "power-user": {
     exec: "auto-approve",
     browser: "auto-approve",
-    // Fleet: underclocking is the safest corrective action — control script
-    // still validates fleet capacity constraints (MIN_HASHRATE_PCT, MIN_UNDERCLOCK_PCT).
-    // Maintenance and shutdown remain human-confirm even for power users.
-    fleet_underclock: "auto-approve",
   },
 };
 
@@ -76,28 +84,57 @@ export class Catalog {
     this.images = { ...data.images };
     this.templates = {};
 
-    // Deep copy and apply profile overrides
-    const overrides = TRUST_OVERRIDES[profile] ?? {};
+    const blanket = TRUST_OVERRIDES[profile] ?? {};
     for (const [name, entry] of Object.entries(data.templates)) {
+      // Resolve effective tier: per-entry override (most specific) wins
+      // over blanket profile rule, which wins over the entry's own
+      // `approval_tier` (least specific).
+      const perEntry = entry.tier_overrides?.[profile];
+      const effective = perEntry ?? blanket[name] ?? entry.approval_tier;
       this.templates[name] = {
         ...entry,
-        approval_tier: overrides[name] ?? entry.approval_tier,
+        approval_tier: effective,
       };
     }
   }
 
   /**
-   * Load catalog from the bundled `catalog/default.json`.
+   * Load catalog from the bundled `catalog/default.json`, optionally
+   * merging a deployment-specific overlay file (ADR-002 § 3.2).
+   *
+   * Overlay templates are merged into defaults; on key collision the
+   * overlay wins (operators can override default entries by re-declaring
+   * them). Same merge applies to the `images` map.
+   *
+   * Failure modes:
+   *   - overlay path supplied but file missing → throws (operator
+   *     misconfiguration, fail loud at registration time)
+   *   - overlay path not supplied → load defaults only
+   *   - malformed JSON in either file → throws
+   *
+   * @param profile  Trust profile applied after merge.
+   * @param overlayPath  Optional absolute path to overlay JSON.
    */
-  static load(profile: TrustProfile = "standard"): Catalog {
-    const catalogPath = resolve(
+  static load(
+    profile: TrustProfile = "standard",
+    overlayPath?: string,
+  ): Catalog {
+    const defaultPath = resolve(
       dirname(fileURLToPath(import.meta.url)),
       "..",
       "catalog",
       "default.json",
     );
-    const raw = readFileSync(catalogPath, "utf-8");
-    const data: CatalogData = JSON.parse(raw);
+    const data: CatalogData = JSON.parse(readFileSync(defaultPath, "utf-8"));
+
+    if (overlayPath) {
+      const overlay: CatalogData = JSON.parse(
+        readFileSync(overlayPath, "utf-8"),
+      );
+      Object.assign(data.templates, overlay.templates ?? {});
+      Object.assign(data.images, overlay.images ?? {});
+    }
+
     return new Catalog(data, profile);
   }
 

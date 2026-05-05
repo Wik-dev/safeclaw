@@ -40,6 +40,10 @@
 | FR-027 | `/sc-policies revoke <rule_id>` deletes a rule, restoring default approval behavior               | `index.ts`            | Calls `DELETE /api/policies/{id}`                                   |
 | FR-028 | Learned rules persist across conversations (belong to user, not conversation)                     | Engine contract       | Rules stored server-side; survive plugin/agent restarts             |
 | FR-029 | Learned rules apply across all channels (Telegram, Discord, TUI, etc.)                            | `session-map.ts`      | Session hash derived from `agentId` (channel-independent)           |
+| FR-030 | Load optional catalog overlay merged into the bundled default                                     | `catalog.ts`          | `Catalog.load(profile, overlayPath?)`; overlay wins on key collision (ADR-002) |
+| FR-031 | Resolve overlay path from `catalogOverlayPath` config first, `SAFECLAW_CATALOG_OVERLAY` env var as fallback | `index.ts`            | Plugin config preferred; env var for environments where editing config is harder (ADR-002) |
+| FR-032 | Fail loudly when overlay path is supplied but file missing or malformed                           | `catalog.ts`          | Operator misconfiguration must not silently degrade to default-only catalog (ADR-002) |
+| FR-033 | Support per-entry `tier_overrides` mapping `TrustProfile → tier`                                  | `catalog.ts`          | Per-entry override wins over blanket `TRUST_OVERRIDES`; lets overlay entries declare their own profile semantics (ADR-002 § 3.3) |
 
 
 ## 2. Non-Functional Requirements

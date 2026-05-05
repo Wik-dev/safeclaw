@@ -27,9 +27,14 @@ export default {
     const config: SafeClawConfig = (api.pluginConfig ?? {}) as SafeClawConfig;
     const kernelUrl = config.kernelUrl ?? "http://localhost:7400";
     const trustProfile = (config.trustProfile ?? "standard") as TrustProfile;
+    // ADR-002: overlay path comes from plugin config, with env var as fallback
+    // for environments where editing the OpenClaw config is harder than
+    // setting an env var.
+    const overlayPath =
+      config.catalogOverlayPath ?? process.env.SAFECLAW_CATALOG_OVERLAY;
 
     const client = new KernelClient(kernelUrl);
-    const catalog = Catalog.load(trustProfile);
+    const catalog = Catalog.load(trustProfile, overlayPath);
     const workspacePath: string =
       api.config?.agents?.defaults?.workspace ?? process.cwd();
 

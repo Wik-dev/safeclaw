@@ -18,6 +18,15 @@ export interface SafeClawConfig {
   gatewayPort?: number;
   /** Host/IP for the approval webhook URL (seen from Validance container). Defaults to "localhost". */
   gatewayHost?: string;
+  /**
+   * Optional absolute path to a catalog overlay JSON file (ADR-002).
+   * Templates in the overlay are merged into the bundled default
+   * catalog; on key collision the overlay wins. Used by operators to
+   * add deployment-specific tools (vertical extensions, operational
+   * endpoints) without modifying the published artifact. If omitted,
+   * the env var `SAFECLAW_CATALOG_OVERLAY` is consulted as a fallback.
+   */
+  catalogOverlayPath?: string;
 }
 
 /**

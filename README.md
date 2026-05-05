@@ -95,6 +95,55 @@ To deny: /sc-approve <id> deny
 | `trustProfile` | `standard` | Approval tier preset |
 | `gatewayPort` | `18789` | OpenClaw gateway port (for approval webhooks; relevant when the Validance instance can reach the host) |
 | `gatewayHost` | `localhost` | Host for webhook URL as seen from the Validance instance |
+| `catalogOverlayPath` | *(unset)* | Absolute path to a catalog overlay JSON file. Templates in the overlay are merged into the bundled default catalog; overlay wins on key collision. Falls back to the `SAFECLAW_CATALOG_OVERLAY` env var if unset. |
+
+## Adding your own tools (catalog overlay)
+
+The bundled `catalog/default.json` ships the 16 OpenClaw-native tool replacements. To add deployment-specific tools — vertical extensions, operational endpoints, custom workflows — supply an **overlay file** at deployment time. Your overlay lives outside the npm package; the published plugin stays clean.
+
+**1. Author the overlay** (any absolute path on the host):
+
+```jsonc
+// /etc/safeclaw/local-overlay.json
+{
+  "templates": {
+    "my_tool": {
+      "description": "What this tool does (used in the LLM tool description)",
+      "docker_image": "my-image",
+      "command_template": "python /project/scripts/my_tool.py",
+      "parameter_schema": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string", "description": "Input value" }
+        },
+        "required": ["input"]
+      },
+      "approval_tier": "human-confirm",
+      "timeout": 60,
+      "rate_limit": 50,
+      "tier_overrides": {
+        "power-user": "auto-approve"
+      }
+    }
+  },
+  "images": {
+    "my-image": "registry.example.com/my-image:latest"
+  }
+}
+```
+
+**2. Wire it into the plugin** — choose one:
+
+- *Plugin config* — add `"catalogOverlayPath": "/etc/safeclaw/local-overlay.json"` to the `config` block in your OpenClaw config.
+- *Environment variable* — `export SAFECLAW_CATALOG_OVERLAY=/etc/safeclaw/local-overlay.json` before starting the OpenClaw gateway.
+
+**3. Restart the OpenClaw gateway.**
+
+The corresponding template must also be registered on your Validance instance (image built and available, parameter schema understood). Overlay entries that the kernel doesn't recognize will fail at proposal time with "unknown action."
+
+`tier_overrides` lets your overlay declare its own per-profile semantics. Conservative-profile users see `human-confirm`; power-user-profile users see whatever you mapped (e.g. `auto-approve` for read-only queries). The blanket `TRUST_OVERRIDES` table in `src/catalog.ts` is bypassed for entries that supply their own.
+
+Overlay entries can also override existing default entries — e.g. tighten a default tool's `rate_limit` for your deployment by re-declaring the template under the same key. Overlay wins on collision.
 
 ## Development
 
