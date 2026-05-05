@@ -1,5 +1,7 @@
 # SafeClaw
 
+Source: [github.com/Wik-dev/safeclaw](https://github.com/Wik-dev/safeclaw)
+
 [OpenClaw](https://openclaw.ai/) plugin that makes it safe to run OpenClaw on your everyday machine. Tool execution is routed to a [Validance](https://docs.validance.io/) instance (or any server that implements the contract) — gated by human approval, learned policies, and governance; recorded in a tamper-evident audit chain.
 
 ## Why this exists
