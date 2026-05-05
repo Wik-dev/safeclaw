@@ -1,4 +1,4 @@
-name: Publish to npm
+name: Publish to npm and ClawHub
 
 on:
   push:
@@ -38,3 +38,20 @@ jobs:
       - run: npm test
 
       - run: npm publish --access public
+
+      - name: Install ClawHub CLI
+        run: npm install -g clawhub
+
+      - name: Authenticate with ClawHub
+        run: clawhub login --token "$CLAWHUB_TOKEN" --no-browser
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+
+      - name: Publish to ClawHub
+        run: |
+          clawhub package publish "$PWD" \
+            --family code-plugin \
+            --source-repo "$GITHUB_REPOSITORY" \
+            --source-commit "$GITHUB_SHA" \
+            --source-ref "$GITHUB_REF" \
+            --version "${GITHUB_REF#refs/tags/v}"

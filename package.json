@@ -28,7 +28,8 @@
   "files": [
     "dist/",
     "catalog/",
-    "bin/"
+    "bin/",
+    "openclaw.plugin.json"
   ],
   "devDependencies": {
     "typescript": "^5.4.0",
@@ -48,6 +49,9 @@
     "compat": {
       "pluginApi": ">=2026.4.15",
       "minGatewayVersion": "2026.4.15"
+    },
+    "build": {
+      "openclawVersion": "2026.4.15"
     }
   }
 }
