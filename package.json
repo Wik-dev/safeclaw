@@ -18,7 +18,6 @@
   "files": [
     "dist/",
     "catalog/",
-    "docker/",
     "bin/"
   ],
   "devDependencies": {
